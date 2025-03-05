@@ -3,5 +3,6 @@
   "get_started_by_editing": "編集して開始",
   "this_is_a_sample_client_component": "これはサンプルのクライアントコンポーネントです",
   "save_and_see_your_changes_instantly": "保存してすぐに変更を確認",
-  "read_our_docs": "ドキュメントを読む"
+  "read_our_docs": "ドキュメントを読む",
+  "toggle_theme": "テーマ切替"
 }
