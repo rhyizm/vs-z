@@ -3,9 +3,9 @@ import SampleClientComponents from "@/components/SampleClientComponents";
 import { initTranslations } from "@/app/i18n";
 
 interface TranslationsProviderProps {
-  params: {
+  params: Promise< {
     locale: string;
-  };
+  }>;
 }
 
 export default async function Home(props: TranslationsProviderProps) {
