@@ -4,5 +4,9 @@
   "this_is_a_sample_client_component": "これはサンプルのクライアントコンポーネントです",
   "save_and_see_your_changes_instantly": "保存してすぐに変更を確認",
   "read_our_docs": "ドキュメントを読む",
-  "toggle_theme": "テーマ切替"
+  "toggle_theme": "テーマ切替",
+  "english": "English",
+  "japanese": "日本語",
+  "french": "Français",
+  "language": "言語"
 }

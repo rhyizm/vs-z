@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-// import "./globals.css";
 import "../globals.css";
+import LanguageSelector from "@/components/LanguageSelector";
 import { initTranslations } from "@/app/i18n";
 import TranslationsProvider from "@/components/TranslationsProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -39,15 +39,18 @@ export default async function RootLayout({
   });
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <TranslationsProvider locale={locale} namespaces={namespaces} resources={resources}>
           <ThemeProvider>
-            <div className="fixed top-4 right-4 z-50">
-              <ThemeToggle />
-            </div>
+            <header className="fixed w-full flex items-center justify-end px-6 py-4 bg-gray-50 dark:bg-gray-900">
+              <div className="flex items-center space-x-4">
+                <ThemeToggle />
+                <LanguageSelector />
+              </div>
+            </header>
             {children}
           </ThemeProvider>
         </TranslationsProvider>

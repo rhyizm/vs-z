@@ -4,5 +4,9 @@
   "this_is_a_sample_client_component": "Ceci est un composant client d'exemple",
   "save_and_see_your_changes_instantly": "Enregistrez et voyez vos modifications instantanément",
   "read_our_docs": "Lire notre documentation",
-  "toggle_theme": "Changer de thème"
+  "toggle_theme": "Changer de thème",
+  "english": "English",
+  "japanese": "日本語",
+  "french": "Français",
+  "language": "Langue"
 }
