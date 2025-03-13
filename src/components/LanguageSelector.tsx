@@ -22,13 +22,15 @@ export default function LanguageSelector() {
   const currentLocale = getCurrentLocale();
 
   // Handle language change
-  const handleLanguageChange = (locale: string) => {
-    // Get the path without the locale
+  const handleLanguageChange = (locale: typeof i18nConfig.locales[number]) => {
     const pathSegments = pathname.split('/');
-    pathSegments[1] = locale;
+    const firstSegmentIsLocale = i18nConfig.locales.includes(pathSegments[1] as typeof i18nConfig.locales[number]);
+    if (firstSegmentIsLocale) {
+      pathSegments[1] = locale;
+    } else {
+      pathSegments.splice(1, 0, locale);
+    }
     const newPath = pathSegments.join('/');
-    
-    // Navigate to the new path
     router.push(newPath);
     setIsOpen(false);
   };
