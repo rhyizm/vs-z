@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePathname, useRouter } from 'next/navigation';
-import { i18nConfig } from '../../i18nConfig';
+import { i18nConfig } from '../../../i18nConfig';
 
 export default function LanguageSelector() {
   const { t } = useTranslation();
