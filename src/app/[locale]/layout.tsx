@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import LanguageSelector from "@/components/i18n/LanguageSelector";
-import { initTranslations } from "@/app/i18n";
+import { initTranslations } from "@/components/i18n";
 import TranslationsProvider from "@/components/i18n/TranslationsProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";

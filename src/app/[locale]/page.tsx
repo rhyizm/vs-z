@@ -1,6 +1,6 @@
 import Image from "next/image";
 import SampleClientComponents from "@/components/SampleClientComponents";
-import { initTranslations } from "@/app/i18n";
+import { initTranslations } from "@/components/i18n";
 
 interface TranslationsProviderProps {
   params: Promise< {
