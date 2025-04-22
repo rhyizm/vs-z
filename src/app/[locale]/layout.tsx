@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
-import LanguageSelector from "@/components/i18n/LanguageSelector";
 import { initTranslations } from "@/components/i18n";
 import TranslationsProvider from "@/components/i18n/TranslationsProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { Content, Header, Sidebar, Wrapper } from "@/components/layout";
+import type { SidebarItem } from "@/components/layout/Sidebar";
+import {
+  Home,
+  User,
+  Settings,
+  HelpCircle,
+} from "lucide-react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +37,29 @@ export default async function RootLayout({
 }>) {
   const { locale } = await params;
 
+  const sidebarItems: SidebarItem[] = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: <Home className="h-5 w-5" />,
+    },
+    {
+      name: "Users",
+      href: "/users",
+      icon: <User className="h-5 w-5" />,
+    },
+    {
+      name: "Settings",
+      href: "/settings",
+      icon: <Settings className="h-5 w-5" />,
+    },
+    {
+      name: "Help",
+      href: "/help",
+      icon: <HelpCircle className="h-5 w-5" />,
+    },
+  ];
+
   const namespaces = ["common"];
 
   const { resources } = await initTranslations({
@@ -45,13 +74,13 @@ export default async function RootLayout({
       >
         <TranslationsProvider locale={locale} namespaces={namespaces} resources={resources}>
           <ThemeProvider>
-            <header className="fixed w-full flex items-center justify-end px-6 py-4 bg-gray-50 dark:bg-gray-900">
-              <div className="flex items-center space-x-4">
-                <ThemeToggle />
-                <LanguageSelector />
-              </div>
-            </header>
-            {children}
+            <Wrapper>
+              <Sidebar sidebarItems={sidebarItems} />
+              <Content>
+                <Header />
+                {children}
+              </Content>
+            </Wrapper>
           </ThemeProvider>
         </TranslationsProvider>
       </body>

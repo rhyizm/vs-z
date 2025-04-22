@@ -5,11 +5,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --border: #e5e7eb; /* Tailwindのgray-200相当 */
 }
 
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --border: #262626; /* Tailwindのneutral-800相当 */
 }
 
 body {
