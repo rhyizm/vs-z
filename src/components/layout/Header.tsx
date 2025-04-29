@@ -2,8 +2,8 @@ import React from 'react';
 import { Coins } from 'lucide-react'; // Import an icon for credits
 import HeaderBrand from './HeaderBrand';
 import LanguageSelector from "@/components/i18n/LanguageSelector";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-
+import ThemeToggle from "@/components/theme/ThemeToggle";
+import UserMenu from './UserMenu';
 
 interface HeaderProps {
   credits?: number;
@@ -26,6 +26,9 @@ const Header: React.FC<HeaderProps> = ({ credits }) => {
         <div className="flex items-center space-x-4">
           <ThemeToggle />
           <LanguageSelector />
+        </div>
+        <div className="ml-5">
+          <UserMenu settingsText="Settings" logoutText="Logout" />
         </div>
       </div>
     </header>

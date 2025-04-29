@@ -8,5 +8,13 @@
   "english": "English",
   "japanese": "日本語",
   "french": "Français",
-  "language": "言語"
+  "language": "言語",
+  "sidebar": {
+    "dashboard": "ダッシュボード",
+    "users": "ユーザー",
+    "settings": "設定",
+    "help": "ヘルプ",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfUse": "利用規約"
+  }
 }

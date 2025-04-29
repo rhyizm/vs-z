@@ -36,36 +36,37 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
+  const namespaces = ["common", "auth"]; // Add 'auth' namespace
 
+  // Initialize translations and get the 't' function
+  const { resources, t } = await initTranslations({
+    locale,
+    namespaces: namespaces,
+  });
+
+  // Define sidebar items using the 't' function for names
   const sidebarItems: SidebarItem[] = [
     {
-      name: "Dashboard",
-      href: "/dashboard",
+      name: t('sidebar.dashboard'),
+      href: "/",
       icon: <Home className="h-5 w-5" />,
     },
     {
-      name: "Users",
-      href: "/users",
+      name: t('sidebar.users'),
+      href: "/",
       icon: <User className="h-5 w-5" />,
     },
     {
-      name: "Settings",
+      name: t('sidebar.settings'),
       href: "/settings",
       icon: <Settings className="h-5 w-5" />,
     },
     {
-      name: "Help",
-      href: "/help",
+      name: t('sidebar.help'),
+      href: "/",
       icon: <HelpCircle className="h-5 w-5" />,
     },
   ];
-
-  const namespaces = ["common"];
-
-  const { resources } = await initTranslations({
-    locale,
-    namespaces: namespaces,
-  });
 
   return (
     <html lang="en" suppressHydrationWarning>
