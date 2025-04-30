@@ -1,0 +1,34 @@
+{
+  "common": {
+    "deploy_now": "Deploy Now",
+    "get_started_by_editing": "Get started by editing",
+    "this_is_a_sample_client_component": "This is a sample client component",
+    "save_and_see_your_changes_instantly": "Save and see your changes instantly",
+    "read_our_docs": "Read our docs",
+    "toggle_theme": "Toggle theme",
+    "english": "English",
+    "japanese": "Japanese",
+    "french": "French",
+    "language": "Language"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "settings": "Settings",
+    "help": "Help",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfUse": "Terms of Use"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "signInButton": "Sign In",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign Up",
+    "googleButton": "Sign in with Google"
+  }
+}

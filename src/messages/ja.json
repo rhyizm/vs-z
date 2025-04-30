@@ -1,0 +1,34 @@
+{
+  "common": {
+    "deploy_now": "今すぐデプロイ",
+    "get_started_by_editing": "編集して開始",
+    "this_is_a_sample_client_component": "これはサンプルのクライアントコンポーネントです",
+    "save_and_see_your_changes_instantly": "保存してすぐに変更を確認",
+    "read_our_docs": "ドキュメントを読む",
+    "toggle_theme": "テーマ切替",
+    "english": "English",
+    "japanese": "日本語",
+    "french": "Français",
+    "language": "言語"
+  },
+  "sidebar": {
+    "dashboard": "ダッシュボード",
+    "users": "ユーザー",
+    "settings": "設定",
+    "help": "ヘルプ",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfUse": "利用規約"
+  },
+  "auth": {
+    "signIn": "サインイン",
+    "signOut": "サインアウト",
+    "signUp": "サインアップ",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "signInButton": "サインイン",
+    "noAccount": "アカウントをお持ちでない方はこちら",
+    "signUpLink": "サインアップ",
+    "googleButton": "Googleでサインイン"
+  }
+}

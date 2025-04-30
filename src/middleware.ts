@@ -1,42 +1,50 @@
-// ./src/middleware.ts
-
 import { NextRequest, NextResponse } from 'next/server';
-import { i18nRouter } from 'next-i18n-router';
-import { i18nConfig } from '../i18nConfig';
-import { updateSession } from './lib/supabase/middleware';
+import createMiddleware from 'next-intl/middleware';
+// import { updateSession } from './lib/supabase/middleware'; // Keep commented out
 
-// ./src/middleware.ts
+const locales = ['en', 'ja', 'fr'] as const;
+const defaultLocale = 'en';
+
+const nextIntlMiddleware = createMiddleware({
+  locales: locales,
+  defaultLocale: defaultLocale,
+  localePrefix: 'as-needed'
+});
+
 export async function middleware(request: NextRequest): Promise<NextResponse> {
+  // Keep Supabase middleware commented out for debugging
+  /*
   const supabaseResponse = await updateSession(request);
 
-  /* ① まず「リダイレクト or リライト」の応答はそのまま返す */
   if (
-    supabaseResponse.headers.get("location") ||               // ← これ
-    supabaseResponse.headers.get("x-middleware-rewrite")      // ← または rewrite
+    supabaseResponse.headers.get('location') ||
+    supabaseResponse.headers.get('x-middleware-rewrite')
   ) {
     return supabaseResponse;
   }
+  */
 
-  /* ② 次に「Set-Cookie だけ」なら、一度ブラウザに返して再リクエストさせる */
-  if (supabaseResponse.headers.has("set-cookie")) {
-    return supabaseResponse;
-  }
+  // Run only the next-intl middleware
+  const nextIntlResponse = nextIntlMiddleware(request);
+  
+  // console.log(nextIntlResponse); // Keep or remove console.log as needed
 
-  /* ③ ここまで来て初めて i18nRouter を通す */
-  const i18nResponse = i18nRouter(request, i18nConfig);
-
-  /* ④ クッキーなど上書き危険の少ないヘッダーだけマージ */
+  /*
+  // Merge headers (keep commented out)
   supabaseResponse.headers.forEach((value, key) => {
-    if (!["x-middleware-rewrite", "location"].includes(key)) {
-      i18nResponse.headers.set(key, value);
+    const lowerCaseKey = key.toLowerCase();
+    if (!['x-middleware-rewrite', 'location', 'content-type', 'content-length'].includes(lowerCaseKey)) {
+      nextIntlResponse.headers.set(key, value);
     }
   });
+  */
 
-  return i18nResponse;
+  return nextIntlResponse;
 }
 
-
-// Specify the paths this middleware applies to
 export const config = {
-  matcher: '/((?!api|static|.*\\..*|_next).*)',
+  // Match all pathnames except for
+  // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
+  // - … the ones containing a dot (e.g. `favicon.ico`)
+  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
 };

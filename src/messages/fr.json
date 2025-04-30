@@ -1,0 +1,34 @@
+{
+  "common": {
+    "deploy_now": "Déployer maintenant",
+    "get_started_by_editing": "Commencez par modifier",
+    "this_is_a_sample_client_component": "Ceci est un exemple de composant client",
+    "save_and_see_your_changes_instantly": "Enregistrez et voyez vos changements instantanément",
+    "read_our_docs": "Lisez notre documentation",
+    "toggle_theme": "Changer de thème",
+    "english": "Anglais",
+    "japanese": "Japonais",
+    "french": "Français",
+    "language": "Langue"
+  },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "users": "Utilisateurs",
+    "settings": "Paramètres",
+    "help": "Aide",
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfUse": "Conditions d'utilisation"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "signUp": "S'inscrire",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "signInButton": "Se connecter",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "signUpLink": "S'inscrire",
+    "googleButton": "Se connecter avec Google"
+  }
+}

@@ -1,9 +1,9 @@
-import Image from "next/image";
-import SampleClientComponents from "@/components/SampleClientComponents";
-import { initTranslations } from "@/components/i18n";
+import Image from 'next/image';
+import SampleClientComponents from '@/components/SampleClientComponents';
+import { getTranslations } from 'next-intl/server';
 
 interface TranslationsProviderProps {
-  params: Promise< {
+  params: Promise<{
     locale: string;
   }>;
 }
@@ -11,10 +11,7 @@ interface TranslationsProviderProps {
 export default async function Home(props: TranslationsProviderProps) {
   const { locale } = await props.params;
 
-  const { t } = await initTranslations({
-    locale,
-    namespaces: ["common"],
-  });
+  const t = await getTranslations('common');
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -29,13 +26,13 @@ export default async function Home(props: TranslationsProviderProps) {
         />
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
-            {`${t("get_started_by_editing")}`}{" "}
+            {t('get_started_by_editing')}{' '}
             <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
+              src/app/[locale]/page.tsx
             </code>
             .
           </li>
-          <li className="mb-2">{`${t("save_and_see_your_changes_instantly")}.`}</li>
+          <li className="mb-2">{t('save_and_see_your_changes_instantly')}.</li>
           <li className="mb-2">{`Current Locale is ${locale}.`}</li>
         </ol>
 
@@ -53,7 +50,7 @@ export default async function Home(props: TranslationsProviderProps) {
               width={20}
               height={20}
             />
-            {`${t("deploy_now")}`}
+            {t('deploy_now')}
           </a>
           <a
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
@@ -61,8 +58,8 @@ export default async function Home(props: TranslationsProviderProps) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            {`${t("read_our_docs")}`}
-            </a>
+            {t('read_our_docs')}
+          </a>
         </div>
         <SampleClientComponents />
       </main>

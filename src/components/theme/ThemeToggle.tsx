@@ -1,20 +1,18 @@
 'use client';
 
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
 export default function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const { t } = useTranslation('common');
+  const t = useTranslations('common');
   const [mounted, setMounted] = useState(false);
   
-  // After mounting, we have access to the theme
   useEffect(() => {
     setMounted(true);
   }, []);
   
-  // Prevent hydration mismatch by rendering a placeholder during SSR
   if (!mounted) {
     return (
       <button
@@ -38,7 +36,6 @@ export default function ThemeToggle() {
       aria-label={t('toggle_theme')}
     >
       {resolvedTheme === 'light' ? (
-        // Moon icon for dark mode
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

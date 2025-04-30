@@ -2,11 +2,11 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useTranslation } from "react-i18next";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Cookies from 'js-cookie';
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import HeaderBrand from "./HeaderBrand";
 
 export type SidebarItem = {
@@ -23,7 +23,7 @@ type SidebarProps = {
 export default function Sidebar({ sidebarItems, initialCollapsed = true }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const pathname = usePathname();
-  const { t } = useTranslation('common'); // Use common namespace
+  const t = useTranslations('sidebar');
 
   const toggleCollapsed = () => {
     const newState = !collapsed;
@@ -126,13 +126,13 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
                 href="/terms/privacy-policy"
                 className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 whitespace-nowrap"
               >
-                {t('sidebar.privacyPolicy')}
+                {t('privacyPolicy')} {/* Key relative to 'sidebar' namespace */}
               </Link>
               <Link
-                href="/terms/term-of-use"
+                href="/terms/term-of-use" // Note: Consider making this path locale-aware if needed
                 className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 whitespace-nowrap"
               >
-                {t('sidebar.termsOfUse')}
+                {t('termsOfUse')} {/* Key relative to 'sidebar' namespace */}
               </Link>
               <div className="text-sm text-gray-600 dark:text-gray-300 mt-3 whitespace-nowrap">{`© 2025 ${"Next.js-v15-i18n"}`}</div>
             </div>

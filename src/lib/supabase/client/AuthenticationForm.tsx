@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useTranslation } from 'react-i18next'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
+import { useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+// Removed react-i18next import
+import { useTranslations } from 'next-intl'; // Import next-intl hook
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
 import type { AuthChangeEvent } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 
@@ -17,9 +18,11 @@ interface AuthProps {
 export default function AuthenticationForm({
   providers = ['google'],
 }: AuthProps) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { t } = useTranslation('auth') // Load the 'auth' namespace
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Use next-intl hook, passing the top-level key for auth UI translations
+  // Assuming your messages/xx/auth.json has a structure like: { "authUI": { "sign_in": { ... } } }
+  const t = useTranslations('authUI');
 
   const redirectTo = useMemo(() => {
     if (typeof window === 'undefined') return undefined
@@ -50,22 +53,23 @@ export default function AuthenticationForm({
         showLinks={true}
         localization={{
           variables: {
+            // Keys are now relative to the 'authUI' namespace provided to useTranslations
             sign_in: {
-              email_label: t('authUI.sign_in.email_label'),
-              password_label: t('authUI.sign_in.password_label'),
-              button_label: t('authUI.sign_in.button_label'),
-              link_text: t('authUI.sign_in.link_text'),
+              email_label: t('sign_in.email_label'),
+              password_label: t('sign_in.password_label'),
+              button_label: t('sign_in.button_label'),
+              link_text: t('sign_in.link_text'),
             },
             sign_up: {
-              email_label: t('authUI.sign_up.email_label'),
-              password_label: t('authUI.sign_up.password_label'),
-              button_label: t('authUI.sign_up.button_label'),
-              link_text: t('authUI.sign_up.link_text'),
+              email_label: t('sign_up.email_label'),
+              password_label: t('sign_up.password_label'),
+              button_label: t('sign_up.button_label'),
+              link_text: t('sign_up.link_text'),
             },
             forgotten_password: {
-              email_label: t('authUI.forgotten_password.email_label'),
-              button_label: t('authUI.forgotten_password.button_label'),
-              link_text: t('authUI.forgotten_password.link_text'),
+              email_label: t('forgotten_password.email_label'),
+              button_label: t('forgotten_password.button_label'),
+              link_text: t('forgotten_password.link_text'),
             },
           },
         }}

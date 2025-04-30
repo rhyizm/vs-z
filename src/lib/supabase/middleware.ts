@@ -49,15 +49,6 @@ export const updateSession = async (request: NextRequest) => {
     sanitizedPath.startsWith(`/${slug}`)
   );
 
-  console.log("[middleware] ", {
-    pathname,
-    needsAuth,
-    user,
-    userId: user?.id ?? null,
-    access: request.cookies.get("sb-access-token")?.value?.slice(0, 10) ?? null,
-    refresh: request.cookies.get("sb-refresh-token")?.value?.slice(0, 10) ?? null,
-  });
-
   if (needsAuth && !user) {                                   // ← `!user` で未ログイン判定
     return NextResponse.redirect(new URL("/auth", request.url));
   }

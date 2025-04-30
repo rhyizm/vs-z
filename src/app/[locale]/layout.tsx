@@ -1,17 +1,20 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "../globals.css";
-import { initTranslations } from "@/components/i18n";
-import TranslationsProvider from "@/components/i18n/TranslationsProvider";
-import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { Content, Header, Sidebar, Wrapper } from "@/components/layout";
-import type { SidebarItem } from "@/components/layout/Sidebar";
+import type { Metadata } from 'next';
+import {notFound} from 'next/navigation';
+import { Geist, Geist_Mono } from 'next/font/google';
+import '../globals.css';
+import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { getMessages, getTranslations } from 'next-intl/server';
+import NextAuthSessionProviderWrapper from '@/lib/next-auth/components/NextAuthSessionProviderWrapper';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
+import { Content, Header, Sidebar, Wrapper } from '@/components/layout';
+import type { SidebarItem } from '@/components/layout/Sidebar';
 import {
   Home,
   User,
   Settings,
   HelpCircle,
 } from "lucide-react";
+import {routing} from '@/i18n/routing';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,54 +39,69 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
-  const namespaces = ["common", "auth"]; // Add 'auth' namespace
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
 
-  // Initialize translations and get the 't' function
-  const { resources, t } = await initTranslations({
-    locale,
-    namespaces: namespaces,
-  });
+  const messages = await getMessages();
 
-  // Define sidebar items using the 't' function for names
+  const t = await getTranslations({ locale: locale, namespace: 'sidebar' });
+
   const sidebarItems: SidebarItem[] = [
     {
-      name: t('sidebar.dashboard'),
-      href: "/",
+      name: t('dashboard'), // Use key relative to the 'sidebar' namespace
+      href: '/',
       icon: <Home className="h-5 w-5" />,
     },
     {
-      name: t('sidebar.users'),
-      href: "/",
+      name: t('users'), // Use key relative to the 'sidebar' namespace
+      href: '/',
       icon: <User className="h-5 w-5" />,
     },
     {
-      name: t('sidebar.settings'),
-      href: "/settings",
+      name: t('settings'), // Use key relative to the 'sidebar' namespace
+      href: '/settings',
       icon: <Settings className="h-5 w-5" />,
     },
     {
-      name: t('sidebar.help'),
-      href: "/",
+      name: t('help'), // Use key relative to the 'sidebar' namespace
+      href: '/',
       icon: <HelpCircle className="h-5 w-5" />,
     },
   ];
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TranslationsProvider locale={locale} namespaces={namespaces} resources={resources}>
-          <ThemeProvider>
-            <Wrapper>
-              <Sidebar sidebarItems={sidebarItems} />
-              <Content>
-                <Header />
-                {children}
-              </Content>
-            </Wrapper>
-          </ThemeProvider>
-        </TranslationsProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {process.env.AUTH_SYSTEM === 'nextauth' ? (
+            <NextAuthSessionProviderWrapper>
+              {/* Removed TranslationsProvider */}
+              <ThemeProvider>
+                <Wrapper>
+                  <Sidebar sidebarItems={sidebarItems} />
+                  <Content>
+                    <Header />
+                    {children}
+                  </Content>
+                </Wrapper>
+              </ThemeProvider>
+            </NextAuthSessionProviderWrapper>
+          ) : (
+            // Removed TranslationsProvider
+            <ThemeProvider>
+              <Wrapper>
+                <Sidebar sidebarItems={sidebarItems} />
+                <Content>
+                  <Header />
+                  {children}
+                </Content>
+              </Wrapper>
+            </ThemeProvider>
+          )}
+        </NextIntlClientProvider>
       </body>
     </html>
   );
