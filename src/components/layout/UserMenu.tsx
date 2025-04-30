@@ -6,13 +6,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Session } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import type { AuthChangeEvent } from '@supabase/supabase-js';
+import { useTranslations } from 'next-intl';
 
-interface UserMenuProps {
-  settingsText: string;
-  logoutText: string;
-}
-
-export default function UserMenu({ settingsText, logoutText }: UserMenuProps) {
+export default function UserMenu() {
+  const t = useTranslations();
   const [session, setSession] = useState<Session | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -90,7 +87,7 @@ export default function UserMenu({ settingsText, logoutText }: UserMenuProps) {
             {session.user.user_metadata?.avatar_url || session.user.user_metadata?.image ? (
               <img
                 src={session.user.user_metadata?.avatar_url || session.user.user_metadata?.image}
-                alt={session.user.user_metadata?.name || 'User'}
+                alt={session.user.user_metadata?.name || t('common.user')}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -106,24 +103,24 @@ export default function UserMenu({ settingsText, logoutText }: UserMenuProps) {
                 {(session.user.user_metadata?.avatar_url || session.user.user_metadata?.image) && (
                   <img
                     src={session.user.user_metadata?.avatar_url || session.user.user_metadata?.image}
-                    alt={session.user.user_metadata?.name || 'User'}
+                    alt={session.user.user_metadata?.name || t('common.user')}
                     className="h-6 w-6 rounded-full mr-2 object-cover"
                   />
                 )}
-                <span className="truncate">{session.user.user_metadata?.name || 'User'}</span>
+                <span className="truncate">{session.user.user_metadata?.name || t('common.user')}</span>
               </div>
               <Link
                 href={`/settings`}
                 onClick={() => { setIsDropdownOpen(false); if (pathname !== `/settings`) setLoading(true); }}
                 className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                {settingsText}
+                {t('common.settings')}
               </Link>
               <button
                 onClick={() => { setIsDropdownOpen(false); signOut(); }}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                {logoutText}
+                {t('auth.signOut')}
               </button>
             </div>
           )}

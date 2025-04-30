@@ -9,15 +9,14 @@
     "english": "English",
     "japanese": "日本語",
     "french": "Français",
-    "language": "言語"
-  },
-  "sidebar": {
-    "dashboard": "ダッシュボード",
+    "language": "言語",
+    "user": "ユーザー",
     "users": "ユーザー",
     "settings": "設定",
     "help": "ヘルプ",
     "privacyPolicy": "プライバシーポリシー",
-    "termsOfUse": "利用規約"
+    "termsOfUse": "利用規約",
+    "dashboard": "ダッシュボード"
   },
   "auth": {
     "signIn": "サインイン",
@@ -30,5 +29,23 @@
     "hasAccount": "アカウントをお持ちの方はこちら",
     "noAccount": "アカウントをお持ちでない方はこちら",
     "googleButton": "Googleでサインイン"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": {
+      "title": "プロフィール",
+      "description": "プロフィール情報を更新します。",
+      "usernameLabel": "ユーザー名",
+      "usernamePlaceholder": "ユーザー名を入力してください",
+      "emailLabel": "メールアドレス",
+      "emailPlaceholder": "メールアドレスを入力してください",
+      "saveButton": "変更を保存"
+    },
+    "accountConnections": {
+      "title": "アカウント連携",
+      "description": "連携済みのアカウントを管理します。",
+      "googleConnected": "Google カレンダー接続済",
+      "googleConnect": "Google カレンダーを接続"
+    }
   }
 }

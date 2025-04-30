@@ -9,15 +9,14 @@
     "english": "English",
     "japanese": "Japanese",
     "french": "French",
-    "language": "Language"
-  },
-  "sidebar": {
-    "dashboard": "Dashboard",
+    "language": "Language",
+    "user": "User",
     "users": "Users",
     "settings": "Settings",
     "help": "Help",
     "privacyPolicy": "Privacy Policy",
-    "termsOfUse": "Terms of Use"
+    "termsOfUse": "Terms of Use",
+    "dashboard": "Dashboard"
   },
   "auth": {
     "signIn": "Sign In",
@@ -30,5 +29,23 @@
     "hasAccount": "Already have an account?",
     "noAccount": "Don't have an account?",
     "googleButton": "Sign in with Google"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "description": "Update your profile information.",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "Enter your username",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email",
+      "saveButton": "Save Changes"
+    },
+    "accountConnections": {
+      "title": "Account Connections",
+      "description": "Manage your connected accounts.",
+      "googleConnected": "Google Calendar Connected",
+      "googleConnect": "Connect Google Calendar"
+    }
   }
 }

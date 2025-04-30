@@ -23,7 +23,7 @@ type SidebarProps = {
 export default function Sidebar({ sidebarItems, initialCollapsed = true }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const pathname = usePathname();
-  const t = useTranslations('sidebar');
+  const t = useTranslations('common');
 
   const toggleCollapsed = () => {
     const newState = !collapsed;

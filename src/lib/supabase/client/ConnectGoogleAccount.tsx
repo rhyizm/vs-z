@@ -5,13 +5,17 @@ import { Button } from '@/components/ui/button'
 import { Link, Check } from 'lucide-react'
 
 interface ConnectGoogleAccountProps {
-  scope: string
-  linked: boolean
+  scope: string;
+  linked: boolean;
+  connectedText: string;
+  connectText: string;
 }
 
 export default function ConnectGoogleAccount({
   scope,
   linked,
+  connectedText,
+  connectText,
 }: ConnectGoogleAccountProps) {
   const supabase = createClient()
 
@@ -36,12 +40,12 @@ export default function ConnectGoogleAccount({
   return linked ? (
     <Button variant="outline" disabled className="cursor-default">
       <Check className="mr-2 h-4 w-4" />
-      Google カレンダー接続済
+      {connectedText}
     </Button>
   ) : (
     <Button variant="outline" onClick={connectGoogle}>
       <Link className="mr-2 h-4 w-4" />
-      Google カレンダーを接続
+      {connectText}
     </Button>
   )
 }

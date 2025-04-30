@@ -45,26 +45,26 @@ export default async function RootLayout({
 
   const messages = await getMessages();
 
-  const t = await getTranslations({ locale: locale, namespace: 'sidebar' });
+  const t = await getTranslations({ locale: locale, namespace: 'common' });
 
   const sidebarItems: SidebarItem[] = [
     {
-      name: t('dashboard'), // Use key relative to the 'sidebar' namespace
+      name: t('dashboard'),
       href: '/',
       icon: <Home className="h-5 w-5" />,
     },
     {
-      name: t('users'), // Use key relative to the 'sidebar' namespace
+      name: t('users'),
       href: '/',
       icon: <User className="h-5 w-5" />,
     },
     {
-      name: t('settings'), // Use key relative to the 'sidebar' namespace
+      name: t('settings'),
       href: '/settings',
       icon: <Settings className="h-5 w-5" />,
     },
     {
-      name: t('help'), // Use key relative to the 'sidebar' namespace
+      name: t('help'),
       href: '/',
       icon: <HelpCircle className="h-5 w-5" />,
     },

@@ -9,15 +9,14 @@
     "english": "Anglais",
     "japanese": "Japonais",
     "french": "Français",
-    "language": "Langue"
-  },
-  "sidebar": {
-    "dashboard": "Tableau de bord",
+    "language": "Langue",
+    "user": "Utilisateur",
     "users": "Utilisateurs",
     "settings": "Paramètres",
     "help": "Aide",
     "privacyPolicy": "Politique de confidentialité",
-    "termsOfUse": "Conditions d'utilisation"
+    "termsOfUse": "Conditions d'utilisation",
+    "dashboard": "Tableau de bord"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -30,5 +29,23 @@
     "hasAccount": "Vous avez déjà un compte ?",
     "noAccount": "Vous n'avez pas de compte ?",
     "googleButton": "Se connecter avec Google"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": {
+      "title": "Profil",
+      "description": "Mettez à jour vos informations de profil.",
+      "usernameLabel": "Nom d'utilisateur",
+      "usernamePlaceholder": "Entrez votre nom d'utilisateur",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "saveButton": "Enregistrer les modifications"
+    },
+    "accountConnections": {
+      "title": "Connexions de compte",
+      "description": "Gérez vos comptes connectés.",
+      "googleConnected": "Calendrier Google connecté",
+      "googleConnect": "Connecter le calendrier Google"
+    }
   }
 }
