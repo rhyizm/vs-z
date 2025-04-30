@@ -22,13 +22,13 @@
   "auth": {
     "signIn": "サインイン",
     "signOut": "サインアウト",
-    "signUp": "サインアップ",
+    "signUp": "アカウント登録",
     "email": "メールアドレス",
     "password": "パスワード",
+    "resetPassword": "パスワードをリセット",
     "forgotPassword": "パスワードをお忘れですか？",
-    "signInButton": "サインイン",
+    "hasAccount": "アカウントをお持ちの方はこちら",
     "noAccount": "アカウントをお持ちでない方はこちら",
-    "signUpLink": "サインアップ",
     "googleButton": "Googleでサインイン"
   }
 }

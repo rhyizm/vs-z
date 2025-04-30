@@ -1,50 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
-// import { updateSession } from './lib/supabase/middleware'; // Keep commented out
+import { updateSession } from '@/lib/supabase/middleware';
 
+// i18n 設定
 const locales = ['en', 'ja', 'fr'] as const;
 const defaultLocale = 'en';
 
-const nextIntlMiddleware = createMiddleware({
-  locales: locales,
-  defaultLocale: defaultLocale,
-  localePrefix: 'as-needed'
+const handleI18nRouting = createMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'as-needed' // 必要なときだけ /en プレフィックスを付与
 });
 
-export async function middleware(request: NextRequest): Promise<NextResponse> {
-  // Keep Supabase middleware commented out for debugging
-  /*
-  const supabaseResponse = await updateSession(request);
+export async function middleware(request: NextRequest) {
+  // 1) next-intl でルーティング／リダイレクトを決定
+  const response = handleI18nRouting(request);
 
-  if (
-    supabaseResponse.headers.get('location') ||
-    supabaseResponse.headers.get('x-middleware-rewrite')
-  ) {
-    return supabaseResponse;
-  }
-  */
+  // 2) Supabase に NextResponse を渡して Cookie を確定
+  const finalResponse = await updateSession(request, response);
 
-  // Run only the next-intl middleware
-  const nextIntlResponse = nextIntlMiddleware(request);
-  
-  // console.log(nextIntlResponse); // Keep or remove console.log as needed
-
-  /*
-  // Merge headers (keep commented out)
-  supabaseResponse.headers.forEach((value, key) => {
-    const lowerCaseKey = key.toLowerCase();
-    if (!['x-middleware-rewrite', 'location', 'content-type', 'content-length'].includes(lowerCaseKey)) {
-      nextIntlResponse.headers.set(key, value);
-    }
-  });
-  */
-
-  return nextIntlResponse;
+  return finalResponse;
 }
 
+// matcher は next-intl の推奨パターン＋必要なら追加ルート
 export const config = {
-  // Match all pathnames except for
-  // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
-  // - … the ones containing a dot (e.g. `favicon.ico`)
   matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
 };

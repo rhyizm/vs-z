@@ -1,21 +1,20 @@
-"use client"; // Required for using hooks like useTranslation and client-side event handlers
+"use client";
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-// Removed react-i18next import
-import { useTranslations } from 'next-intl'; // Import next-intl hook
-import { useParams } from 'next/navigation'; // To get locale for redirect
+import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 
 export default function NextAuthSignInPage() {
-  const t = useTranslations(); // Use next-intl hook (loads all messages by default)
+  const t = useTranslations();
   const params = useParams();
-  const locale = params.locale as string; // Keep locale for redirects/callbacks
+  const locale = params.locale as string;
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError(null); // Clear previous errors
+    setError(null);
     setIsLoading(true);
 
     const formData = new FormData(event.currentTarget);
@@ -24,15 +23,13 @@ export default function NextAuthSignInPage() {
 
     try {
       const result = await signIn("credentials", {
-        redirect: false, // Handle redirect manually based on result
+        redirect: false,
         email,
         password,
-        // callbackUrl: `/${locale}` // Optional: specify where to redirect on success
       });
 
       if (result?.error) {
         console.error("Sign in failed:", result.error);
-        // Map common errors to user-friendly messages using top-level errors
         if (result.error === "CredentialsSignin") {
           setError(t('errors.invalidCredentials'));
         } else {
@@ -40,12 +37,11 @@ export default function NextAuthSignInPage() {
         }
       } else if (result?.ok) {
         console.log("Sign in successful");
-        // Redirect user to the home page for their locale
         window.location.href = `/${locale}`;
       }
     } catch (err) {
       console.error("Sign in exception:", err);
-      setError(t('errors.unknownError')); // Use top-level error key
+      setError(t('errors.unknownError'));
     } finally {
       setIsLoading(false);
     }
@@ -56,10 +52,10 @@ export default function NextAuthSignInPage() {
       <div className="w-full max-w-md space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            {t('signIn.title')} {/* Keep page-specific title */}
+            {t('signIn.title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            {t('signIn.description')} {/* Keep page-specific description */}
+            {t('signIn.description')}
           </p>
         </div>
         <form className="mt-8 space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-gray-800" onSubmit={handleSignIn}>
@@ -67,7 +63,7 @@ export default function NextAuthSignInPage() {
           <div className="space-y-4 rounded-md shadow-sm">
             <div>
               <label htmlFor="email-address" className="sr-only">
-                {t('authUI.sign_in.email_label')} {/* Use existing key */}
+                {t('authUI.sign_in.email_label')}
               </label>
               <input
                 id="email-address"
@@ -111,14 +107,13 @@ export default function NextAuthSignInPage() {
             </button>
           </div>
 
-          <div className="mt-6"> {/* Added margin-top for spacing */}
+          <div className="mt-6">
             <button
               type="button"
               onClick={() => signIn('google', { callbackUrl: `/${locale}` })}
               className="group relative flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800"
             >
-              {/* Add Google Icon SVG or similar here if desired */}
-              {t('signIn.googleButton')} {/* Add translation key */}
+              {t('signIn.googleButton')}
             </button>
           </div>
         </form>

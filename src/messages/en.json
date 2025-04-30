@@ -25,10 +25,10 @@
     "signUp": "Sign Up",
     "email": "Email",
     "password": "Password",
+    "resetPassword": "Reset Password",
     "forgotPassword": "Forgot password?",
-    "signInButton": "Sign In",
+    "hasAccount": "Already have an account?",
     "noAccount": "Don't have an account?",
-    "signUpLink": "Sign Up",
     "googleButton": "Sign in with Google"
   }
 }
