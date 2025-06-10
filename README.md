@@ -8,18 +8,21 @@ This is a template project for Next.js v15 (App Router) featuring internationali
 *   **TypeScript:** For type safety and improved developer experience.
 *   **Tailwind CSS:** A utility-first CSS framework for rapid UI development.
 *   **Internationalization (i18n):**
-    *   Powered by `next-i18n-router`, `i18next`, and `react-i18next`.
+    *   Powered by `next-intl` (migrated from i18next).
     *   Supports multiple languages (English, Japanese, French configured by default).
     *   Locale-based routing (e.g., `/en`, `/ja`, `/fr`).
     *   Language selector component included.
-    *   Translation files located in `src/locales/`.
+    *   Translation files located in `src/messages/`.
 *   **Light/Dark Mode:**
     *   Implemented using `next-themes`.
     *   Theme toggle component allows users to switch between light, dark, or system preference.
+*   **Authentication:** Dual authentication system supporting both NextAuth.js and Supabase.
+*   **UI Components:** Built with shadcn/ui and Radix UI primitives.
 *   **Layout Components:** Pre-built components for common layouts (Sidebar, Header, Content).
 *   **Icons:** Uses `lucide-react` for a clean set of icons.
 *   **Fonts:** Includes Geist Sans and Geist Mono fonts.
 *   **ESLint:** Configured for code linting.
+*   **DevContainer:** Full Docker development environment with VS Code integration.
 
 ## Getting Started
 
@@ -69,10 +72,12 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 *   [React](https://reactjs.org/)
 *   [TypeScript](https://www.typescriptlang.org/)
 *   [Tailwind CSS](https://tailwindcss.com/)
-*   [next-i18n-router](https://github.com/i18nexus/next-i18n-router)
-*   [i18next](https://www.i18next.com/)
-*   [react-i18next](https://react.i18next.com/)
+*   [next-intl](https://next-intl-docs.vercel.app/)
 *   [next-themes](https://github.com/pacocoursey/next-themes)
+*   [NextAuth.js](https://next-auth.js.org/)
+*   [Supabase](https://supabase.io/)
+*   [shadcn/ui](https://ui.shadcn.com/)
+*   [Radix UI](https://www.radix-ui.com/)
 *   [lucide-react](https://lucide.dev/)
 
 ## Folder Structure (Key Directories)
@@ -85,17 +90,22 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │   │   ├── [locale]/   # Locale-specific routes
 │   │   │   ├── layout.tsx
 │   │   │   └── page.tsx
-│   │   ├── api/        # API routes
+│   │   ├── api/        # API routes (auth endpoints)
+│   │   │   ├── auth/   # Authentication routes (NextAuth, Supabase)
 │   │   └── globals.css
 │   ├── components/     # Reusable React components
-│   │   ├── i18n/       # i18n related components (Provider, Selector)
+│   │   ├── i18n/       # i18n related components (Language Selector)
 │   │   ├── layout/     # Layout components (Header, Sidebar, etc.)
+│   │   ├── settings/   # Settings page components
 │   │   ├── theme/      # Theme related components (Provider, Toggle)
-│   │   └── ui/         # General UI components (if any)
-│   ├── locales/        # Translation files (en, ja, fr)
+│   │   └── ui/         # shadcn/ui components (Button, Card, Input, etc.)
+│   ├── lib/            # Utility libraries and configurations
+│   │   ├── next-auth/  # NextAuth.js configuration
+│   │   └── supabase/   # Supabase client setup
+│   ├── messages/       # Translation files (en, ja, fr)
+│   ├── i18n/           # i18n configuration files
 │   ├── middleware.ts   # Next.js middleware for i18n routing
 │   └── ...
-├── i18nConfig.ts       # i18n configuration (locales, defaultLocale)
 ├── next.config.ts      # Next.js configuration
 ├── tailwind.config.ts  # Tailwind CSS configuration
 ├── tsconfig.json       # TypeScript configuration
@@ -104,11 +114,20 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Internationalization (i18n)
 
-*   **Configuration:** Managed in `i18nConfig.ts`. Add or remove locales in the `locales` array.
-*   **Routing:** Handled by `src/middleware.ts` using `next-i18n-router`.
-*   **Translations:** Add/edit JSON files in `src/locales/[locale]/`. The `common` namespace is used by default.
-*   **Usage in Components:** Use the `useTranslation` hook from `react-i18next` within components wrapped by `TranslationsProvider`. See `src/app/[locale]/page.tsx` or `src/components/theme/ThemeToggle.tsx` for examples.
+*   **Configuration:** Managed in `src/i18n/routing.ts`. Add or remove locales in the `locales` array.
+*   **Routing:** Handled by `src/middleware.ts` using `next-intl` middleware.
+*   **Translations:** Add/edit JSON files in `src/messages/[locale].json`. Organized by feature namespaces (common, auth, settings, etc.).
+*   **Usage in Components:** Use `getTranslations()` in Server Components or `useTranslations()` hook in Client Components from `next-intl`.
 *   **Language Selection:** The `src/components/i18n/LanguageSelector.tsx` component provides a basic dropdown for switching languages.
+
+## Authentication
+
+This project supports dual authentication systems:
+
+*   **NextAuth.js:** JWT-based authentication with Google OAuth and custom credentials
+*   **Supabase:** Cookie-based session management with Supabase Auth
+*   **Configuration:** Switch between systems using the `AUTH_SYSTEM` environment variable
+*   **Environment Variables:** See the DevContainer or deployment documentation for required variables
 
 ## Theme Switching
 
