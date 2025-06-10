@@ -1,0 +1,38 @@
+# .devcontainer/docker-compose.yml
+
+services:
+  # サービス名を 'app' とする (devcontainer.json から参照)
+  app:
+    image: dev-node22-bookworm-slim:node22-bookworm-slim
+    build:
+      # ビルドコンテキスト (プロジェクトルート)
+      context: ..
+      # 使用する Dockerfile のパス
+      dockerfile: .devcontainer/Dockerfile
+      # (オプション) ビルド時の引数など
+      # args:
+      #   VARIANT: "22"
+
+    # ボリュームマウント: ホストのプロジェクトディレクトリをコンテナの /app にマウント
+    volumes:
+      - ..:/app
+      - node_modules:/app/node_modules
+      - pnpm_store:/app/.pnpm-store/v10
+      - ~/.gitconfig:/app/.gitconfig:ro
+      # SSH_AUTH_SOCK を転送する場合は VS Code 側で mount 設定を追加予定
+
+    # ポートマッピング: ホストの3000番ポートをコンテナの3000番ポートに接続
+    ports:
+      - "3000:3000"
+
+    # コンテナを起動し続けるためのコマンド (VS Codeが接続するため)
+    command: sleep infinity
+
+    # (オプション) 環境変数など
+    # environment:
+    #   NODE_ENV: development
+
+volumes:
+  node_modules:
+  pnpm_store:
+    external: true

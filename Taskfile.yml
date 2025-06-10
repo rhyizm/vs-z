@@ -1,0 +1,12 @@
+version: "3"
+
+vars:
+  APP_ROOT: /app
+
+tasks:
+  setup:
+    desc: "DevContainer 内で Git を使うための初期設定"
+    cmds:
+      - cp {{.APP_ROOT}}/.gitconfig /home/node/.gitconfig
+      - git config --global core.autocrlf input
+      - git config --global --add safe.directory {{.APP_ROOT}}
