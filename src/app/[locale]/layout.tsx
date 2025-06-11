@@ -76,21 +76,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {process.env.AUTH_SYSTEM === 'nextauth' ? (
-            <NextAuthSessionProviderWrapper>
-              {/* Removed TranslationsProvider */}
-              <ThemeProvider>
-                <Wrapper>
-                  <Sidebar sidebarItems={sidebarItems} />
-                  <Content>
-                    <Header />
-                    {children}
-                  </Content>
-                </Wrapper>
-              </ThemeProvider>
-            </NextAuthSessionProviderWrapper>
-          ) : (
-            // Removed TranslationsProvider
+          <NextAuthSessionProviderWrapper>
             <ThemeProvider>
               <Wrapper>
                 <Sidebar sidebarItems={sidebarItems} />
@@ -100,7 +86,7 @@ export default async function RootLayout({
                 </Content>
               </Wrapper>
             </ThemeProvider>
-          )}
+          </NextAuthSessionProviderWrapper>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -1,15 +1,14 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server'; // Use getTranslations for Server Components
-import { createClient } from "@/lib/supabase/server"; // Use server client
+import { auth } from "@/lib/next-auth/auth"; // Use NextAuth server-side auth
 import AccountConnections from "@/components/settings/AccountConnections";
 import { SettingsCard } from '@/components/settings/SettingsCard';
 
 export default async function SettingsPage() {
   const t = await getTranslations('settings'); // Use await with getTranslations
-  const supabase = await createClient(); // Await the client creation
-  const { data: { user } } = await supabase.auth.getUser(); // Destructure user correctly
+  const session = await auth(); // Get NextAuth session
 
-  if (!user) {
+  if (!session?.user) {
     redirect('/auth');
   }
 
@@ -56,8 +55,8 @@ export default async function SettingsPage() {
         description={t('profile.description')}
         fields={profileFields}
         initialValues={{
-          username: user?.user_metadata?.name || '',
-          email: user?.email || '',
+          username: session.user.name || '',
+          email: session.user.email || '',
         }}
         onSubmit={handleProfileSubmit}
         submitButtonText={t('profile.saveButton')} // Pass translated button text

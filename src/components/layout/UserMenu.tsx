@@ -3,21 +3,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Session } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
-import type { AuthChangeEvent } from '@supabase/supabase-js';
+import { useSession, signOut } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 
 export default function UserMenu() {
   const t = useTranslations();
-  const [session, setSession] = useState<Session | null>(null);
+  const { data: session, status } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const iconButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     setLoading(false);
@@ -42,35 +39,18 @@ export default function UserMenu() {
     };
   }, []);
 
-  // Session change monitoring
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, session) => {
-        setSession(session);
-        if (event === 'SIGNED_IN') {
-          const redirectTo = new URL(window.location.href).searchParams.get('redirectTo') || '/';
-          router.replace(redirectTo);
-        }
-      }
-    );
-    return () => subscription.unsubscribe();
-  }, [router, supabase]);
-
-  // Session retrieval on mount and path change
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-  }, [supabase, pathname]); // Re-fetch session when path changes
+  if (status === 'loading') {
+    return null; // Or a loading spinner
+  }
 
   if (!session?.user) {
     return null;
   }
 
-  const signOut = async () => {
+  const handleSignOut = async () => {
     setLoading(true);
-    await supabase.auth.signOut();
-    router.push(`/`);
+    await signOut({ redirect: false });
+    router.push('/');
   };
 
   return (
@@ -84,10 +64,10 @@ export default function UserMenu() {
             aria-expanded={isDropdownOpen}
             aria-haspopup="true"
           >
-            {session.user.user_metadata?.avatar_url || session.user.user_metadata?.image ? (
+            {session.user.image ? (
               <img
-                src={session.user.user_metadata?.avatar_url || session.user.user_metadata?.image}
-                alt={session.user.user_metadata?.name || t('common.user')}
+                src={session.user.image}
+                alt={session.user.name || t('common.user')}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -100,24 +80,24 @@ export default function UserMenu() {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
               <div className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
-                {(session.user.user_metadata?.avatar_url || session.user.user_metadata?.image) && (
+                {session.user.image && (
                   <img
-                    src={session.user.user_metadata?.avatar_url || session.user.user_metadata?.image}
-                    alt={session.user.user_metadata?.name || t('common.user')}
+                    src={session.user.image}
+                    alt={session.user.name || t('common.user')}
                     className="h-6 w-6 rounded-full mr-2 object-cover"
                   />
                 )}
-                <span className="truncate">{session.user.user_metadata?.name || t('common.user')}</span>
+                <span className="truncate">{session.user.name || t('common.user')}</span>
               </div>
               <Link
-                href={`/settings`}
-                onClick={() => { setIsDropdownOpen(false); if (pathname !== `/settings`) setLoading(true); }}
+                href="/settings"
+                onClick={() => { setIsDropdownOpen(false); if (pathname !== '/settings') setLoading(true); }}
                 className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 {t('common.settings')}
               </Link>
               <button
-                onClick={() => { setIsDropdownOpen(false); signOut(); }}
+                onClick={() => { setIsDropdownOpen(false); handleSignOut(); }}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 {t('auth.signOut')}

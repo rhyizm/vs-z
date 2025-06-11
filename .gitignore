@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local development
 .gitconfig
+
+# Claude
+.claude/
+CLAUDE.md

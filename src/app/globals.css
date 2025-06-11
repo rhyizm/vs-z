@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Supabase Auth UI Dark Mode Input Text Color Fix */
-.dark .supabase-auth-ui_ui-input {
-  color: hsl(var(--foreground));
-}
-
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;

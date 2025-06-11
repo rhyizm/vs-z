@@ -1,17 +1,7 @@
 // src/app/[locale]/auth/page.tsx
-import AuthenticationForm from '@/lib/supabase/client/AuthenticationForm'
+import { redirect } from 'next/navigation'
 
 export default function AuthPage() {
-  return (
-    <div
-      className="
-        w-full
-        max-w-md
-        pt-[6rem]
-        mx-auto
-      "
-    >
-      <AuthenticationForm />
-    </div>
-  )
+  // Redirect to NextAuth sign in page
+  redirect('/auth/nextauth/signin')
 }
