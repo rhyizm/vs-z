@@ -7,6 +7,7 @@ import { getMessages, getTranslations } from 'next-intl/server';
 import NextAuthSessionProviderWrapper from '@/lib/next-auth/components/NextAuthSessionProviderWrapper';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { Content, Header, Sidebar, Wrapper } from '@/components/layout';
+import { MobileSidebarProvider } from '@/components/layout/MobileSidebarContext';
 import type { SidebarItem } from '@/components/layout/Sidebar';
 import {
   Home,
@@ -55,7 +56,7 @@ export default async function RootLayout({
     },
     {
       name: t('users'),
-      href: '/',
+      href: '/users',
       icon: <User className="h-5 w-5" />,
     },
     {
@@ -65,7 +66,7 @@ export default async function RootLayout({
     },
     {
       name: t('help'),
-      href: '/',
+      href: '/help',
       icon: <HelpCircle className="h-5 w-5" />,
     },
   ];
@@ -78,13 +79,15 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <NextAuthSessionProviderWrapper>
             <ThemeProvider>
-              <Wrapper>
-                <Sidebar sidebarItems={sidebarItems} />
-                <Content>
-                  <Header />
-                  {children}
-                </Content>
-              </Wrapper>
+              <MobileSidebarProvider>
+                <Wrapper>
+                  <Sidebar sidebarItems={sidebarItems} />
+                  <Content>
+                    <Header />
+                    {children}
+                  </Content>
+                </Wrapper>
+              </MobileSidebarProvider>
             </ThemeProvider>
           </NextAuthSessionProviderWrapper>
         </NextIntlClientProvider>

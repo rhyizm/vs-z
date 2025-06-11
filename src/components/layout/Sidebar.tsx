@@ -3,11 +3,11 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Cookies from 'js-cookie';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import HeaderBrand from "./HeaderBrand";
+import { useMobileSidebar } from './MobileSidebarContext';
 
 export type SidebarItem = {
   name: string;
@@ -22,8 +22,8 @@ type SidebarProps = {
 
 export default function Sidebar({ sidebarItems, initialCollapsed = true }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
-  const pathname = usePathname();
   const t = useTranslations('common');
+  const { isOpen, close } = useMobileSidebar();
 
   const toggleCollapsed = () => {
     const newState = !collapsed;
@@ -39,14 +39,27 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
   }, [collapsed]);
 
   return (
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={close}
+        />
+      )}
+
+      {/* Sidebar */}
       <aside
         className={`
-          hidden md:flex flex-col flex-shrink-0
+          fixed md:relative
+          flex flex-col flex-shrink-0
           h-screen
           transition-all duration-300 ease-in-out
-          bg-background border-r border-border
-          ${collapsed ? "w-16" : "w-64"}
-          z-40
+          bg-white dark:bg-gray-950 border-r border-border
+          ${collapsed && !isOpen ? "w-16" : "w-64"}
+          z-50
+          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          md:flex
         `}
       >
         <div className="flex flex-col h-full">
@@ -54,20 +67,29 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
           <div
             className={`
             flex items-center justify-between h-16 px-3.5 border-b border-border
-            ${collapsed ? "justify-center" : ""}
+            ${collapsed && !isOpen ? "justify-center" : ""}
           `}
           >
 
-            {!collapsed && (
+            {(!collapsed || isOpen) && (
               <HeaderBrand />
             )}
 
-            {/* Toggle button */}
+            {/* Mobile close button */}
+            <button
+              className="md:hidden p-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              onClick={close}
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Desktop toggle button */}
             <button
               className={`
                 hidden md:flex items-center justify-center p-1.5 rounded-md
                 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
-                ${collapsed ? "mx-auto" : ""}
+                ${collapsed && !isOpen ? "mx-auto" : ""}
               `}
               onClick={toggleCollapsed}
             >
@@ -79,34 +101,18 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
           <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-thin">
             <ul className="space-y-2">
               {sidebarItems.map((item) => {
-                const isActive = pathname === item.href;
-
                 return (
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className={`
-                        flex items-center p-2 rounded-lg group
-                        ${
-                          isActive
-                            ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                            : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        }
-                      `}
+                      onClick={close}
+                      className="flex items-center p-2 rounded-lg group transition-colors duration-200 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
                     >
-                      <div
-                        className={`
-                          ${
-                            isActive
-                              ? "text-primary-600 dark:text-primary-400"
-                              : "text-gray-600 dark:text-gray-300 group-hover:text-gray-700 dark:group-hover:text-gray-300"
-                          }
-                        `}
-                      >
+                      <div className="text-gray-600 dark:text-gray-300 group-hover:text-gray-700 dark:group-hover:text-gray-300">
                         {item.icon}
                       </div>
 
-                      <span className={`w-0 m-0 whitespace-nowrap transition-opacity duration-300 ${collapsed ? 'opacity-0 invisible' : 'opacity-100 ml-3'}`}>{item.name}</span>
+                      <span className={`w-0 m-0 whitespace-nowrap transition-opacity duration-300 ${collapsed && !isOpen ? 'opacity-0 invisible' : 'opacity-100 ml-3'}`}>{item.name}</span>
                     </Link>
                   </li>
                 );
@@ -118,10 +124,10 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
           <div
             className={`
               py-4 px-2 border-t border-border flex flex-col overflow-hidden 
-              ${collapsed ? "text-center" : "flex justify-between items-center"}
+              ${collapsed && !isOpen ? "text-center" : "flex justify-between items-center"}
             `}
           >
-            <div className={`text-sm flex flex-col space-y-3 ${collapsed ? 'hidden' : ''}`}>
+            <div className={`text-sm flex flex-col space-y-3 ${collapsed && !isOpen ? 'hidden' : ''}`}>
               <Link
                 href="/terms/privacy-policy"
                 className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 whitespace-nowrap"
@@ -139,5 +145,6 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
           </div>
         </div>
       </aside>
+    </>
   );
 }
