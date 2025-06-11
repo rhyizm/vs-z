@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ credits }) => {
           <LanguageSelector />
         </div>
         <div className="ml-5">
-          <UserMenu settingsText="Settings" logoutText="Logout" />
+          <UserMenu />
         </div>
       </div>
     </header>

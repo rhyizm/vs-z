@@ -23,7 +23,7 @@ export default function AccountConnections({
   // Check if Google account is connected
   // In NextAuth, accounts are typically linked during the initial sign-in
   // This is a simplified version - you may need to adjust based on your NextAuth configuration
-  const isGoogleConnected = session?.user?.email && session.user.email.includes('@gmail.com');
+  const isGoogleConnected = !!(session?.user?.email && session.user.email.includes('@gmail.com'));
 
   return (
     <Card>
