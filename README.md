@@ -16,7 +16,7 @@ This is a template project for Next.js v15 (App Router) featuring internationali
 *   **Light/Dark Mode:**
     *   Implemented using `next-themes`.
     *   Theme toggle component allows users to switch between light, dark, or system preference.
-*   **Authentication:** Dual authentication system supporting both NextAuth.js and Supabase.
+*   **Authentication:** NextAuth.js-based authentication with Google OAuth and custom credentials.
 *   **UI Components:** Built with shadcn/ui and Radix UI primitives.
 *   **Layout Components:** Pre-built components for common layouts (Sidebar, Header, Content).
 *   **Icons:** Uses `lucide-react` for a clean set of icons.
@@ -75,7 +75,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 *   [next-intl](https://next-intl-docs.vercel.app/)
 *   [next-themes](https://github.com/pacocoursey/next-themes)
 *   [NextAuth.js](https://next-auth.js.org/)
-*   [Supabase](https://supabase.io/)
 *   [shadcn/ui](https://ui.shadcn.com/)
 *   [Radix UI](https://www.radix-ui.com/)
 *   [lucide-react](https://lucide.dev/)
@@ -91,7 +90,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │   │   │   ├── layout.tsx
 │   │   │   └── page.tsx
 │   │   ├── api/        # API routes (auth endpoints)
-│   │   │   ├── auth/   # Authentication routes (NextAuth, Supabase)
+│   │   │   ├── auth/   # NextAuth.js authentication routes
 │   │   └── globals.css
 │   ├── components/     # Reusable React components
 │   │   ├── i18n/       # i18n related components (Language Selector)
@@ -100,8 +99,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │   │   ├── theme/      # Theme related components (Provider, Toggle)
 │   │   └── ui/         # shadcn/ui components (Button, Card, Input, etc.)
 │   ├── lib/            # Utility libraries and configurations
-│   │   ├── next-auth/  # NextAuth.js configuration
-│   │   └── supabase/   # Supabase client setup
+│   │   └── next-auth/  # NextAuth.js configuration
 │   ├── messages/       # Translation files (en, ja, fr)
 │   ├── i18n/           # i18n configuration files
 │   ├── middleware.ts   # Next.js middleware for i18n routing
@@ -122,12 +120,104 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Authentication
 
-This project supports dual authentication systems:
+This project uses NextAuth.js for authentication:
 
 *   **NextAuth.js:** JWT-based authentication with Google OAuth and custom credentials
-*   **Supabase:** Cookie-based session management with Supabase Auth
-*   **Configuration:** Switch between systems using the `AUTH_SYSTEM` environment variable
-*   **Environment Variables:** See the DevContainer or deployment documentation for required variables
+*   **Configuration:** Located in `src/lib/next-auth/auth.ts` and `auth.config.ts`
+*   **Providers:** Google OAuth and custom credentials (dummy implementation)
+*   **Environment Variables:** Requires `AUTH_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`
+
+### Supabase Authentication Setup (Alternative)
+
+If you want to use Supabase authentication instead of NextAuth.js, you'll need to create the following files:
+
+#### Dependencies
+```bash
+pnpm add @supabase/auth-ui-react @supabase/auth-ui-shared @supabase/ssr @supabase/supabase-js
+```
+
+#### Environment Variables
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+#### Required Files and Content
+
+**`src/lib/supabase/client/index.ts`** - Browser client:
+```typescript
+import { createBrowserClient } from "@supabase/ssr";
+
+export const createClient = () =>
+  createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+```
+
+**`src/lib/supabase/server.ts`** - Server client with cookie handling:
+```typescript
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export const createClient = async () => {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Ignore if called from Server Component
+          }
+        },
+      },
+    },
+  );
+};
+```
+
+**`src/lib/supabase/middleware.ts`** - Session management:
+```typescript
+import {createServerClient} from '@supabase/ssr';
+import {NextResponse, type NextRequest} from 'next/server';
+
+export async function updateSession(request: NextRequest, response: NextResponse) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll(); },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({name, value}) =>
+            request.cookies.set(name, value)
+          );
+          cookiesToSet.forEach(({name, value, options}) =>
+            response.cookies.set(name, value, options)
+          );
+        }
+      }
+    }
+  );
+  await supabase.auth.getUser();
+  return response;
+}
+```
+
+**Authentication Form** - Uses `@supabase/auth-ui-react` with custom localization and OAuth redirect handling.
+
+**OAuth Callback Route** - `/api/auth/supabase/callback/route.ts` handles OAuth redirects using `exchangeCodeForSession()`.
+
+**Component Integration** - User state managed via `onAuthStateChange()` listeners, user data accessed through `user.user_metadata`, account linking via `linkIdentity()`.
+
+**Middleware Integration** - Call `updateSession()` in your main middleware before i18n routing.
 
 ## Theme Switching
 
