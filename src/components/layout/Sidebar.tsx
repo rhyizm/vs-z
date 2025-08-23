@@ -55,7 +55,7 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
           flex flex-col flex-shrink-0
           h-screen
           transition-all duration-300 ease-in-out
-          bg-white dark:bg-gray-950 border-r border-border
+          border-r border-border
           ${collapsed && !isOpen ? "w-16" : "w-64"}
           z-50
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
@@ -64,36 +64,30 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
       >
         <div className="flex flex-col h-full">
           {/* Logo area */}
-          <div
-            className={`
-            flex items-center justify-between h-16 px-3.5 border-b border-border
-            ${collapsed && !isOpen ? "justify-center" : ""}
-          `}
-          >
+          <div className="relative flex items-center h-16 px-3.5 border-b border-border">
+            {/* Desktop toggle button - Always positioned at the left */}
+            <button
+              className="hidden md:flex items-center justify-center p-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 absolute left-3.5"
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            </button>
 
-            {(!collapsed || isOpen) && (
-              <HeaderBrand />
-            )}
+            {/* Logo - Centered when collapsed, offset when expanded */}
+            <div className={`flex-1 flex ${collapsed && !isOpen ? "justify-center" : "justify-center md:ml-8"}`}>
+              {(!collapsed || isOpen) && (
+                <HeaderBrand />
+              )}
+            </div>
 
             {/* Mobile close button */}
             <button
-              className="md:hidden p-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="md:hidden p-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 absolute right-3.5"
               onClick={close}
               aria-label="Close menu"
             >
               <X className="h-5 w-5" />
-            </button>
-
-            {/* Desktop toggle button */}
-            <button
-              className={`
-                hidden md:flex items-center justify-center p-1.5 rounded-md
-                text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
-                ${collapsed && !isOpen ? "mx-auto" : ""}
-              `}
-              onClick={toggleCollapsed}
-            >
-              {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
             </button>
           </div>
 
@@ -106,9 +100,9 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
                     <Link
                       href={item.href}
                       onClick={close}
-                      className="flex items-center p-2 rounded-lg group transition-colors duration-200 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
+                      className="flex items-center p-2 rounded-lg group transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
-                      <div className="text-gray-600 dark:text-gray-300 group-hover:text-gray-700 dark:group-hover:text-gray-300">
+                      <div>
                         {item.icon}
                       </div>
 
