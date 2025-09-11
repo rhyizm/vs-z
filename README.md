@@ -6,7 +6,7 @@ This is a template project for Next.js v15 (App Router) featuring internationali
 
 *   **Next.js 15:** Utilizes the latest features of Next.js, including the App Router.
 *   **TypeScript:** For type safety and improved developer experience.
-*   **Tailwind CSS:** A utility-first CSS framework for rapid UI development.
+*   **Tailwind CSS (v4):** CSS-first setup using `@import "tailwindcss"` with PostCSS plugin `@tailwindcss/postcss`.
 *   **Internationalization (i18n):**
     *   Powered by `next-intl` (migrated from i18next).
     *   Supports multiple languages (English, Japanese, French configured by default).
@@ -105,7 +105,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │   ├── middleware.ts   # Next.js middleware for i18n routing
 │   └── ...
 ├── next.config.ts      # Next.js configuration
-├── tailwind.config.ts  # Tailwind CSS configuration
+├── postcss.config.mjs  # Tailwind v4 via @tailwindcss/postcss
 ├── tsconfig.json       # TypeScript configuration
 └── package.json        # Project dependencies and scripts
 ```
