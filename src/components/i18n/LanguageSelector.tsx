@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useTransition } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
 
 const locales = ['en', 'ja', 'fr'] as const;
@@ -11,6 +11,7 @@ export default function LanguageSelector() {
   const router = useRouter();
   const pathname = usePathname();
   const currentLocale = useLocale();
+  const t = useTranslations('common');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -36,15 +37,19 @@ export default function LanguageSelector() {
   };
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | PointerEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    // Use pointer events for better mobile support
+    document.addEventListener('pointerdown', handleClickOutside as EventListener);
+    // Fallback for older browsers
+    document.addEventListener('mousedown', handleClickOutside as EventListener);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside as EventListener);
+      document.removeEventListener('mousedown', handleClickOutside as EventListener);
     };
   }, []);
 
@@ -65,9 +70,10 @@ export default function LanguageSelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        className="flex items-center space-x-2 p-2 sm:px-3 sm:py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         aria-expanded={isOpen}
         aria-haspopup="true"
+        aria-label={t('language')}
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -83,12 +89,12 @@ export default function LanguageSelector() {
             d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" 
           />
         </svg>
-        <span className={`text-sm font-medium text-gray-700 dark:text-gray-200 ${isPending ? 'opacity-50' : ''}`}>
+        <span className={`hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-200 ${isPending ? 'opacity-50' : ''}`}>
           {getLanguageName(currentLocale)}
         </span>
         <svg
           xmlns="http://www.w3.org/2000/svg" 
-          className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          className={`hidden sm:inline h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"

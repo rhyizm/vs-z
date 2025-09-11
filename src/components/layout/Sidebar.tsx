@@ -56,6 +56,7 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
           h-screen
           transition-all duration-300 ease-in-out
           border-r border-border
+          bg-background dark:bg-neutral-900
           ${collapsed && !isOpen ? "w-16" : "w-64"}
           z-50
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
@@ -64,10 +65,10 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
       >
         <div className="flex flex-col h-full">
           {/* Logo area */}
-          <div className="relative flex items-center h-16 px-3.5 border-b border-border">
+          <div className="relative flex items-center h-16 px-3.5 border-b border-border bg-background dark:bg-neutral-900">
             {/* Desktop toggle button - Always positioned at the left */}
             <button
-              className="hidden md:flex items-center justify-center p-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 absolute left-3.5"
+              className="hidden md:flex items-center justify-center p-1.5 rounded-md text-muted-foreground hover:bg-accent absolute left-3.5"
               onClick={toggleCollapsed}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -83,7 +84,7 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
 
             {/* Mobile close button */}
             <button
-              className="md:hidden p-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 absolute right-3.5"
+              className="md:hidden p-1.5 rounded-md text-muted-foreground hover:bg-accent absolute right-3.5"
               onClick={close}
               aria-label="Close menu"
             >
@@ -100,7 +101,7 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
                     <Link
                       href={item.href}
                       onClick={close}
-                      className="flex items-center p-2 rounded-lg group transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="flex items-center p-2 rounded-lg group transition-colors duration-200 hover:bg-accent"
                     >
                       <div>
                         {item.icon}
@@ -117,24 +118,24 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
           {/* Footer */}
           <div
             className={`
-              py-4 px-2 border-t border-border flex flex-col overflow-hidden 
+              py-4 px-2 border-t border-border flex flex-col overflow-hidden bg-background dark:bg-neutral-900
               ${collapsed && !isOpen ? "text-center" : "flex justify-between items-center"}
             `}
           >
             <div className={`text-sm flex flex-col space-y-3 ${collapsed && !isOpen ? 'hidden' : ''}`}>
               <Link
                 href="/terms/privacy-policy"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 whitespace-nowrap"
+                className="text-muted-foreground hover:text-primary whitespace-nowrap"
               >
                 {t('privacyPolicy')} {/* Key relative to 'sidebar' namespace */}
               </Link>
               <Link
                 href="/terms/term-of-use" // Note: Consider making this path locale-aware if needed
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 whitespace-nowrap"
+                className="text-muted-foreground hover:text-primary whitespace-nowrap"
               >
                 {t('termsOfUse')} {/* Key relative to 'sidebar' namespace */}
               </Link>
-              <div className="text-sm text-gray-600 dark:text-gray-300 mt-3 whitespace-nowrap">{`© 2025 ${"Next.js-v15-i18n"}`}</div>
+              <div className="text-sm text-muted-foreground mt-3 whitespace-nowrap">{`© 2025 ${"Next.js-v15-i18n"}`}</div>
             </div>
           </div>
         </div>

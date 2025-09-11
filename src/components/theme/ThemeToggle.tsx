@@ -20,7 +20,8 @@ export default function ThemeToggle() {
         aria-label={t('toggle_theme')}
       >
         <div className="w-5 h-5" />
-        <span className="ml-2">{t('toggle_theme')}</span>
+        {/* Hide label on small screens to be icon-only */}
+        <span className="ml-2 hidden sm:inline">{t('toggle_theme')}</span>
       </button>
     );
   }
@@ -67,7 +68,8 @@ export default function ThemeToggle() {
           />
         </svg>
       )}
-      <span className="ml-2">{t('toggle_theme')}</span>
+      {/* Hide label on small screens to be icon-only */}
+      <span className="ml-2 hidden sm:inline">{t('toggle_theme')}</span>
     </button>
   );
 }
