@@ -1,9 +1,9 @@
-import { type NextRequest } from 'next/server';
+import { clerkMiddleware } from '@clerk/nextjs/server';
 import createMiddleware from 'next-intl/middleware';
 
 // i18n 設定
-const locales = ['en', 'ja', 'fr'] as const;
-const defaultLocale = 'en';
+const locales = ['ja', 'en'] as const;
+const defaultLocale = 'ja';
 
 const handleI18nRouting = createMiddleware({
   locales,
@@ -11,12 +11,21 @@ const handleI18nRouting = createMiddleware({
   localePrefix: 'as-needed' // 必要なときだけ /en プレフィックスを付与
 });
 
-export async function middleware(request: NextRequest) {
-  // next-intl でルーティング／リダイレクトを決定
-  return handleI18nRouting(request);
-}
+export default clerkMiddleware((_auth, request) => {
+  const { pathname } = request.nextUrl;
 
-// matcher は next-intl の推奨パターン＋必要なら追加ルート
+  if (pathname.startsWith('/api') || pathname.startsWith('/trpc')) {
+    return;
+  }
+
+  return handleI18nRouting(request);
+});
+
 export const config = {
-  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)'
+  ]
 };

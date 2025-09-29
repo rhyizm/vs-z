@@ -1,0 +1,41 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Calculator } from "lucide-react"
+
+export default function IntroStep({ onNext }: { onNext: () => void }) {
+  const [agreed, setAgreed] = useState(false)
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md glass">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full flex items-center justify-center">
+            <Calculator className="w-8 h-8 text-white" />
+          </div>
+          <CardTitle className="text-2xl gradient-text">相続税かんたん診断</CardTitle>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>本ツールは生前の試算です。死亡日の入力は不要です。</p>
+            <p>基礎控除 = 3,000万円 + 600万円 × 法定相続人の数</p>
+            <p className="text-xs">相続放棄予定者がいても「放棄がなかったものとした場合の人数」で計算します。</p>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center space-x-2">
+            <Checkbox id="agreement" checked={agreed} onCheckedChange={(checked) => setAgreed(checked as boolean)} />
+            <Label htmlFor="agreement" className="text-sm">
+              注意事項に同意します（本診断は法的助言ではありません）
+            </Label>
+          </div>
+          <Button onClick={onNext} className="w-full glass-button font-medium py-6" size="lg" disabled={!agreed}>
+            診断をはじめる
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

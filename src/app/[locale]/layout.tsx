@@ -6,15 +6,8 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import NextAuthSessionProviderWrapper from '@/lib/next-auth/components/NextAuthSessionProviderWrapper';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
-import { Content, Header, Sidebar, Wrapper } from '@/components/layout';
+import { Content, Wrapper } from '@/components/layout';
 import { MobileSidebarProvider } from '@/components/layout/MobileSidebarContext';
-import type { SidebarItem } from '@/components/layout/Sidebar';
-import {
-  Home,
-  User,
-  Settings,
-  HelpCircle,
-} from "lucide-react";
 import {routing} from '@/i18n/routing';
 
 const geistSans = Geist({
@@ -46,30 +39,7 @@ export default async function RootLayout({
 
   const messages = await getMessages();
 
-  const t = await getTranslations({ locale: locale, namespace: 'common' });
-
-  const sidebarItems: SidebarItem[] = [
-    {
-      name: t('dashboard'),
-      href: '/',
-      icon: <Home className="h-5 w-5" />,
-    },
-    {
-      name: t('users'),
-      href: '/users',
-      icon: <User className="h-5 w-5" />,
-    },
-    {
-      name: t('settings'),
-      href: '/settings',
-      icon: <Settings className="h-5 w-5" />,
-    },
-    {
-      name: t('help'),
-      href: '/help',
-      icon: <HelpCircle className="h-5 w-5" />,
-    },
-  ];
+  await getTranslations({ locale: locale, namespace: 'common' });
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -81,9 +51,7 @@ export default async function RootLayout({
             <ThemeProvider>
               <MobileSidebarProvider>
                 <Wrapper>
-                  <Sidebar sidebarItems={sidebarItems} />
                   <Content>
-                    <Header />
                     {children}
                   </Content>
                 </Wrapper>
