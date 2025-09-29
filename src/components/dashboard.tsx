@@ -328,20 +328,23 @@ export default function Dashboard({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="glass-light rounded-lg p-5 text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {data.diagnosisResult.totalAssets.toLocaleString()}万円
+                <div className="glass-light rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-1 divide-y divide-white/40 md:grid-cols-2 md:divide-y-0 md:divide-x">
+                    <div className="p-5 text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {data.diagnosisResult.totalAssets.toLocaleString()}万円
+                      </div>
+                      <div className="text-base text-muted-foreground">総資産</div>
                     </div>
-                    <div className="text-base text-muted-foreground">総資産</div>
-                  </div>
-                  <div className="glass-light rounded-lg p-5 text-center">
-                    <div className="text-2xl font-bold text-red-600">
-                      {data.diagnosisResult.totalLiabilities.toLocaleString()}万円
+                    <div className="p-5 text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {data.diagnosisResult.totalLiabilities.toLocaleString()}万円
+                      </div>
+                      <div className="text-base text-muted-foreground">総負債</div>
                     </div>
-                    <div className="text-base text-muted-foreground">総負債</div>
                   </div>
                 </div>
+                <div className="h-px bg-black/10" />
                 <div className="glass-light rounded-lg p-5 text-center">
                   <div className="text-3xl font-bold gradient-text">
                     {data.diagnosisResult.netAssets.toLocaleString()}万円

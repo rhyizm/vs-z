@@ -1,5 +1,5 @@
 // ========= 型定義 =========
-export type Step = "intro" | "spouse" | "children" | "parents" | "siblings" | "dashboard" | "assets" | "result"
+export type Step = "intro" | "spouse" | "children" | "parents" | "siblings" | "dashboard" | "assets"
 
 export type UUID = string
 

@@ -10,7 +10,6 @@ import ChildrenStep from "./steps/ChildrenStep"
 import ParentsStep from "./steps/ParentsStep"
 import SiblingsStep from "./steps/SiblingsStep"
 import AssetsStep from "./steps/AssetsStep"
-import ResultStep from "./steps/ResultStep"
 
 // 型
 import type { Step, FamilyData, AssetData, DashboardData, TaxCalculation } from "./types"
@@ -176,7 +175,8 @@ export default function InheritanceTaxDiagnosis() {
         setCurrentStep("dashboard")
         break
       case "assets":
-        setCurrentStep("result")
+        setDashboardData(generateDashboardData(true))
+        setCurrentStep("dashboard")
         break
       default:
         break
@@ -227,21 +227,8 @@ export default function InheritanceTaxDiagnosis() {
         <AssetsStep
           data={assetData}
           onUpdate={setAssetData}
-          onNext={() => setCurrentStep("result")}
+          onNext={nextStep}
           onBack={() => setCurrentStep("dashboard")}
-        />
-      )
-    case "result":
-      return (
-        <ResultStep
-          calculation={calculation}
-          totalPlus={totalPlus}
-          totalMinus={totalMinus}
-          onBack={() => setCurrentStep("assets")}
-          onToDashboard={() => {
-            setDashboardData(generateDashboardData(true))
-            setCurrentStep("dashboard")
-          }}
         />
       )
     case "dashboard":
