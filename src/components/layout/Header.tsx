@@ -25,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({ credits }) => {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <HeaderBrand mobileOnly={true} text='Next.js v15 i18n' />
+        <HeaderBrand mobileOnly={true} text='VS-Z' />
         <div className="flex flex-grow items-center space-x-2 ml-2 min-w-0">
         </div>
         {/* Display Credits before User Profile */}

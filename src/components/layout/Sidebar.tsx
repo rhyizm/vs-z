@@ -135,7 +135,7 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
               >
                 {t('termsOfUse')} {/* Key relative to 'sidebar' namespace */}
               </Link>
-              <div className="text-sm text-muted-foreground mt-3 whitespace-nowrap">{`© 2025 ${"Next.js-v15-i18n"}`}</div>
+              <div className="text-sm text-muted-foreground mt-3 whitespace-nowrap">{`© 2025 ${"VS-Z"}`}</div>
             </div>
           </div>
         </div>
