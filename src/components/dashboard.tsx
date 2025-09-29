@@ -274,7 +274,7 @@ export default function Dashboard({
       const newActionItems = generateActionItems()
       onUpdate({ ...data, actionItems: newActionItems })
     }
-  }, [data, familyData.hasSpouse, calculation.estimatedTax])
+  }, [data, familyData.hasSpouse, calculation.estimatedTax, generateActionItems, onUpdate])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-blue-50 p-4">
@@ -311,10 +311,64 @@ export default function Dashboard({
         <Card className="glass">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              基礎控除額での仮配分
+              <TrendingUp className="h-5 w-5" />
+              財産の表示と編集
             </CardTitle>
-            <p className="text-sm text-muted-foreground">総財産がちょうど基礎控除額だった場合の法定相続分による配分</p>
+          </CardHeader>
+          <CardContent>
+            {!data.hasAssetData ? (
+              <div className="text-center space-y-4 py-8">
+                <div className="text-muted-foreground">
+                  相続財産が基礎控除（{(calculation.basicDeduction / 10000).toLocaleString()}
+                  万円）を超える可能性がある場合、 財産を入力することで相続財産と相続税の見込みが計算できます。
+                </div>
+                <Button onClick={onToAssets} className="glass-button">
+                  財産を入力する
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="glass-light rounded-lg p-5 text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {data.diagnosisResult.totalAssets.toLocaleString()}万円
+                    </div>
+                    <div className="text-base text-muted-foreground">総資産</div>
+                  </div>
+                  <div className="glass-light rounded-lg p-5 text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      {data.diagnosisResult.totalLiabilities.toLocaleString()}万円
+                    </div>
+                    <div className="text-base text-muted-foreground">総負債</div>
+                  </div>
+                </div>
+                <div className="glass-light rounded-lg p-5 text-center">
+                  <div className="text-3xl font-bold gradient-text">
+                    {data.diagnosisResult.netAssets.toLocaleString()}万円
+                  </div>
+                  <div className="text-base text-muted-foreground">純資産</div>
+                </div>
+                <div className="text-center">
+                  <Button onClick={onToAssets} variant="outline" className="glass-light bg-transparent">
+                    財産を編集する
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="glass">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="h-5 w-5" />
+              {data.hasAssetData ? "財産額での配分" : "基礎控除額での仮配分"}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {data.hasAssetData
+                ? `入力された純資産額（${data.diagnosisResult.netAssets.toLocaleString()}万円）に基づく法定相続分による配分`
+                : "総財産がちょうど基礎控除額だった場合の法定相続分による配分"}
+            </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -329,13 +383,20 @@ export default function Dashboard({
                   </div>
                   <div className="text-right">
                     <div className="font-medium">
-                      {Math.round(
-                        (calculation.basicDeduction / 10000) * (member.inheritanceShare || 0),
+                      {(
+                        data.hasAssetData
+                          ? (member.inheritanceAmount ?? Math.round(
+                              data.diagnosisResult.netAssets * (member.inheritanceShare || 0),
+                            ))
+                          : Math.round(
+                              (calculation.basicDeduction / 10000) * (member.inheritanceShare || 0),
+                            )
                       ).toLocaleString()}
                       万円
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {((member.inheritanceShare || 0) * 100).toFixed(1)}%
+                      {data.hasAssetData ? "（純資産ベース）" : "（基礎控除ベース）"}
                     </div>
                   </div>
                 </div>
@@ -406,56 +467,6 @@ export default function Dashboard({
                 </Card>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              財産の表示と編集
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!data.hasAssetData ? (
-              <div className="text-center space-y-4 py-8">
-                <div className="text-muted-foreground">
-                  相続財産が基礎控除（{(calculation.basicDeduction / 10000).toLocaleString()}
-                  万円）を超える可能性がある場合、 財産を入力することで相続財産と相続税の見込みが計算できます。
-                </div>
-                <Button onClick={onToAssets} className="glass-button">
-                  財産を入力する
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="glass-light rounded-lg p-4 text-center">
-                    <div className="text-xl font-bold text-green-600">
-                      {data.diagnosisResult.totalAssets.toLocaleString()}万円
-                    </div>
-                    <div className="text-sm text-muted-foreground">総資産</div>
-                  </div>
-                  <div className="glass-light rounded-lg p-4 text-center">
-                    <div className="text-xl font-bold text-red-600">
-                      {data.diagnosisResult.totalLiabilities.toLocaleString()}万円
-                    </div>
-                    <div className="text-sm text-muted-foreground">総負債</div>
-                  </div>
-                  <div className="glass-light rounded-lg p-4 text-center">
-                    <div className="text-xl font-bold gradient-text">
-                      {data.diagnosisResult.netAssets.toLocaleString()}万円
-                    </div>
-                    <div className="text-sm text-muted-foreground">純資産</div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <Button onClick={onToAssets} variant="outline" className="glass-light bg-transparent">
-                    財産を編集する
-                  </Button>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
