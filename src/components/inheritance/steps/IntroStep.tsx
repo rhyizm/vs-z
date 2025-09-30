@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -9,6 +9,11 @@ import { Calculator } from "lucide-react"
 
 export default function IntroStep({ onNext }: { onNext: () => void }) {
   const [agreed, setAgreed] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
@@ -26,7 +31,18 @@ export default function IntroStep({ onNext }: { onNext: () => void }) {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center space-x-2">
-            <Checkbox id="agreement" checked={agreed} onCheckedChange={(checked) => setAgreed(checked as boolean)} />
+            {isMounted ? (
+              <Checkbox
+                id="agreement"
+                checked={agreed}
+                onCheckedChange={(checked) => setAgreed(checked === true)}
+              />
+            ) : (
+              <div
+                aria-hidden
+                className="h-4 w-4 shrink-0 rounded-sm border border-primary shadow"
+              />
+            )}
             <Label htmlFor="agreement" className="text-sm">
               注意事項に同意します（本診断は法的助言ではありません）
             </Label>

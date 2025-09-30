@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Users, User, Edit3, CheckSquare, ArrowRight, TrendingUp, Calculator, PieChart } from "lucide-react"
+import { Users, User, Edit3, CheckSquare, ArrowRight, TrendingUp, Calculator } from "lucide-react"
 
 interface FamilyMember {
   id: string
@@ -71,8 +71,7 @@ interface DashboardProps {
   familyData: FamilyData
   calculation: TaxCalculation
   onUpdate: (data: DashboardData) => void
-  onBack: () => void
-  onRestart: () => void
+  onEditFamily: () => void
   onToAssets: () => void
 }
 
@@ -81,8 +80,7 @@ export default function Dashboard({
   familyData,
   calculation,
   onUpdate,
-  onBack,
-  onRestart,
+  onEditFamily,
   onToAssets,
 }: DashboardProps) {
 
@@ -122,6 +120,10 @@ export default function Dashboard({
   const completedActions = data.actionItems.filter((item) => item.completed).length
   const totalActions = data.actionItems.length
   const progressPercentage = totalActions > 0 ? (completedActions / totalActions) * 100 : 0
+  const basicDeductionInManen = calculation.basicDeduction / 10000
+  const totalAssetsMinusBasicDeduction = data.diagnosisResult.totalAssets - basicDeductionInManen
+  const taxableAssetsInManen = Math.max(0, totalAssetsMinusBasicDeduction)
+  const estimatedTaxInManen = Math.max(0, Math.round(data.diagnosisResult.estimatedTax / 10000))
 
   const generateFamilyMembers = (): FamilyMember[] => {
     const members: FamilyMember[] = []
@@ -360,65 +362,64 @@ export default function Dashboard({
             )}
           </CardContent>
         </Card>
+        {data.hasAssetData && (
+          <Card className="glass">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="h-5 w-5" />
+                相続税の概算
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                入力された財産情報を基に、基礎控除後の課税対象額と相続税の概算を表示します。
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="glass-light rounded-lg p-4 text-center space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    総資産（{data.diagnosisResult.totalAssets.toLocaleString()}万円） - 基礎控除（
+                    {basicDeductionInManen.toLocaleString()}万円）
+                  </div>
+                  <div className="text-3xl font-bold gradient-text">
+                    {taxableAssetsInManen.toLocaleString()}万円
+                  </div>
+                  <div className="text-xs text-muted-foreground">課税対象となる財産（概算）</div>
+                </div>
+                <div className="glass-light rounded-lg p-4 text-center space-y-2">
+                  <div className="text-sm text-muted-foreground">相続税の概算</div>
+                  <div className="text-3xl font-bold text-red-600">
+                    {estimatedTaxInManen.toLocaleString()}万円
+                  </div>
+                  <div className="text-xs text-muted-foreground">各種控除や特例は考慮していません</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
+        {/* Family composition and inheritance distribution */}
         <Card className="glass">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              {data.hasAssetData ? "財産額での配分" : "基礎控除額での仮配分"}
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                <span>家族構成と財産配分</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto glass-button"
+                onClick={onEditFamily}
+              >
+                <Edit3 className="h-4 w-4" />
+                編集
+              </Button>
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               {data.hasAssetData
                 ? `入力された純資産額（${data.diagnosisResult.netAssets.toLocaleString()}万円）に基づく法定相続分による配分`
                 : "総財産がちょうど基礎控除額だった場合の法定相続分による配分"}
             </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {familyMembers.map((member) => (
-                <div key={member.id} className="flex justify-between items-center py-2 px-4 glass-light rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <span className="font-medium">{member.name}</span>
-                      <span className="text-sm text-muted-foreground ml-2">({member.relationship})</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">
-                      {(
-                        data.hasAssetData
-                          ? (member.inheritanceAmount ?? Math.round(
-                              data.diagnosisResult.netAssets * (member.inheritanceShare || 0),
-                            ))
-                          : Math.round(
-                              (calculation.basicDeduction / 10000) * (member.inheritanceShare || 0),
-                            )
-                      ).toLocaleString()}
-                      万円
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {((member.inheritanceShare || 0) * 100).toFixed(1)}%
-                      {data.hasAssetData ? "（純資産ベース）" : "（基礎控除ベース）"}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Family composition management */}
-        <Card className="glass">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              家族構成の詳細管理
-              <Button variant="ghost" size="sm" className="ml-auto glass-button">
-                <Edit3 className="h-4 w-4" />
-                編集
-              </Button>
-            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -448,11 +449,21 @@ export default function Dashboard({
                             </span>
                           </div>
                         )}
-                        {member.inheritanceAmount && (
+                        {member.inheritanceShare !== undefined && (
                           <div className="flex items-center gap-2">
                             <Calculator className="h-3 w-3 text-blue-600" />
                             <span className="text-blue-600 font-medium">
-                              相続金額: {member.inheritanceAmount.toLocaleString()}万円
+                              {data.hasAssetData ? "相続金額" : "基礎控除ベース"}:
+                              {" "}
+                              {(data.hasAssetData
+                                ? member.inheritanceAmount ?? Math.round(
+                                    data.diagnosisResult.netAssets * (member.inheritanceShare || 0),
+                                  )
+                                : Math.round(
+                                    (calculation.basicDeduction / 10000) * (member.inheritanceShare || 0),
+                                  )
+                              ).toLocaleString()}
+                              万円
                             </span>
                           </div>
                         )}
@@ -531,16 +542,6 @@ export default function Dashboard({
             </div>
           </CardContent>
         </Card>
-
-        {/* Navigation */}
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={onBack} className="flex-1 glass-light bg-transparent">
-            家族構成に戻る
-          </Button>
-          <Button onClick={onRestart} className="glass-button flex-1">
-            新しい診断を開始
-          </Button>
-        </div>
       </div>
     </div>
   )

@@ -238,45 +238,7 @@ export default function InheritanceTaxDiagnosis() {
           familyData={familyData}
           calculation={calculation}
           onUpdate={setDashboardData}
-          onBack={() => setCurrentStep("siblings")}
-          onRestart={() => {
-            setCurrentStep("intro")
-            setFamilyData({
-              hasSpouse: false,
-              childrenCount: 0,
-              deceasedChildrenCount: 0,
-              deceasedChildrenGrandchildren: [],
-              adoptionCount: { ordinary: 0, special: 0 },
-              parentsAlive: { father: false, mother: false },
-              grandparentsAlive: false,
-              siblingsCount: { fullBlood: 0, halfBlood: 0 },
-              deceasedSiblingsCount: 0,
-              deceasedSiblingsChildren: [],
-            })
-            setAssetData({
-              cash: 0,
-              realEstate: 0,
-              securities: 0,
-              insurance: 0,
-              other: 0,
-              loans: 0,
-              funeralCosts: 0,
-              unpaidTaxes: 0,
-            })
-            setDashboardData({
-              familyMembers: [],
-              actionItems: [],
-              diagnosisResult: {
-                totalAssets: 0,
-                totalLiabilities: 0,
-                netAssets: 0,
-                estimatedTax: 0,
-                taxRate: 0,
-                basicDeduction: 0,
-              },
-              hasAssetData: false,
-            })
-          }}
+          onEditFamily={() => setCurrentStep("spouse")}
           onToAssets={() => setCurrentStep("assets")}
         />
       )
