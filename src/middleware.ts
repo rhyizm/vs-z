@@ -1,5 +1,6 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
 import createMiddleware from 'next-intl/middleware';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 // i18n 設定
 const locales = ['ja', 'en'] as const;
@@ -11,15 +12,15 @@ const handleI18nRouting = createMiddleware({
   localePrefix: 'as-needed' // 必要なときだけ /en プレフィックスを付与
 });
 
-export default clerkMiddleware((_auth, request) => {
+export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api') || pathname.startsWith('/trpc')) {
-    return;
+    return NextResponse.next();
   }
 
   return handleI18nRouting(request);
-});
+}
 
 export const config = {
   matcher: [

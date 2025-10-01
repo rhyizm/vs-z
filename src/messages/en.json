@@ -21,14 +21,11 @@
   "auth": {
     "signIn": "Sign In",
     "signOut": "Sign Out",
-    "signUp": "Sign Up",
-    "email": "Email",
-    "password": "Password",
-    "resetPassword": "Reset Password",
-    "forgotPassword": "Forgot password?",
-    "hasAccount": "Already have an account?",
-    "noAccount": "Don't have an account?",
-    "googleButton": "Sign in with Google"
+    "lineLoginTitle": "Sign in with LINE",
+    "lineLoginDescription": "Use your LINE account to continue to the mini app.",
+    "lineLoginButton": "Continue with LINE",
+    "lineLoginHint": "If the LINE app does not open automatically, tap the button above.",
+    "syncing": "Connecting..."
   },
   "settings": {
     "title": "Settings",
@@ -43,9 +40,11 @@
     },
     "accountConnections": {
       "title": "Account Connections",
-      "description": "Manage your connected accounts.",
-      "googleConnected": "Google Calendar Connected",
-      "googleConnect": "Connect Google Calendar"
+      "description": "Manage how this mini app connects to your LINE account.",
+      "lineConnected": "LINE account connected",
+      "lineConnect": "Connect LINE account",
+      "lineDisconnect": "Disconnect LINE account",
+      "syncing": "Connecting..."
     }
   }
 }

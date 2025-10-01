@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
 import { Users } from "lucide-react"
-import { FamilyData } from "../types"
+import { FamilyData } from "../../../types/inheritance"
 
 export default function ParentsStep({
   data,

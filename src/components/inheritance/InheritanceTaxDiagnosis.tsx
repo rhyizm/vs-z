@@ -12,7 +12,7 @@ import SiblingsStep from "./steps/SiblingsStep"
 import AssetsStep from "./steps/AssetsStep"
 
 // 型
-import type { Step, FamilyData, AssetData, DashboardData, TaxCalculation } from "./types"
+import type { Step, FamilyData, AssetData, DashboardData, TaxCalculation } from "@/types/inheritance"
 
 export default function InheritanceTaxDiagnosis() {
   const [currentStep, setCurrentStep] = useState<Step>("intro")

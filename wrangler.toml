@@ -1,0 +1,9 @@
+name = "vs-z"
+compatibility_date = "2024-12-05"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "vs_z"
+database_name = "vs-z"
+database_id = "604ff2c1-dfc0-47a3-ba02-ea9ce501480e"
+migrations_dir = "./src/db/migrations"

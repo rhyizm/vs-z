@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
 
-const locales = ['en', 'ja', 'fr'] as const;
+const locales = ['en', 'ja'] as const;
 type Locale = typeof locales[number];
 
 export default function LanguageSelector() {
@@ -59,8 +59,6 @@ export default function LanguageSelector() {
         return 'English';
       case 'ja':
         return '日本語';
-      case 'fr':
-        return 'Français';
       default:
         return locale;
     }

@@ -3,12 +3,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
+import { useLiff } from '@/lib/liff';
 
 export default function UserMenu() {
   const t = useTranslations();
   const { data: session, status } = useSession();
+  const {
+    login,
+    logout,
+    isReady,
+    isLoggedIn,
+    syncingSession,
+    error,
+  } = useLiff();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -39,18 +48,40 @@ export default function UserMenu() {
     };
   }, []);
 
-  if (status === 'loading') {
+  useEffect(() => {
+    if (!syncingSession) {
+      setLoading(false);
+    }
+  }, [syncingSession]);
+
+  if (!isReady || status === 'loading') {
     return null; // Or a loading spinner
   }
 
-  if (!session?.user) {
-    return null;
+  if (!isLoggedIn || !session?.user) {
+    return (
+      <div className="flex flex-col items-end space-y-2">
+        {error && (
+          <span className="text-xs text-red-500 dark:text-red-400 max-w-[200px] text-right">
+            {error}
+          </span>
+        )}
+        <button
+          onClick={login}
+          disabled={syncingSession}
+          className="bg-[#06c755] text-white rounded-full font-medium text-sm h-10 px-5 cursor-pointer disabled:opacity-50"
+        >
+          {syncingSession ? t('auth.syncing') : t('auth.lineLoginButton')}
+        </button>
+      </div>
+    );
   }
 
   const handleSignOut = async () => {
     setLoading(true);
-    await signOut({ redirect: false });
+    await logout();
     router.push('/');
+    setLoading(false);
   };
 
   return (
@@ -106,7 +137,7 @@ export default function UserMenu() {
           )}
         </div>
       </div>
-      {loading && (
+      {(loading || syncingSession) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-500"></div>
         </div>

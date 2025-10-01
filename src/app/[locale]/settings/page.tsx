@@ -65,8 +65,10 @@ export default async function SettingsPage() {
       <AccountConnections
         title={t('accountConnections.title')}
         description={t('accountConnections.description')}
-        googleConnectedText={t('accountConnections.googleConnected')}
-        googleConnectText={t('accountConnections.googleConnect')}
+        lineConnectedText={t('accountConnections.lineConnected')}
+        lineConnectText={t('accountConnections.lineConnect')}
+        lineDisconnectText={t('accountConnections.lineDisconnect')}
+        syncingText={t('accountConnections.syncing')}
       />
     </div>
   );

@@ -1,7 +1,8 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
-import React from "react";
+import { SessionProvider } from 'next-auth/react';
+import React from 'react';
+import { LiffProvider } from '@/lib/liff';
 
 interface NextAuthSessionProviderWrapperProps {
   children: React.ReactNode;
@@ -10,5 +11,9 @@ interface NextAuthSessionProviderWrapperProps {
 export default function NextAuthSessionProviderWrapper({
   children,
 }: NextAuthSessionProviderWrapperProps) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <LiffProvider>{children}</LiffProvider>
+    </SessionProvider>
+  );
 }

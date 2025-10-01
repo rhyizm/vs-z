@@ -21,14 +21,11 @@
   "auth": {
     "signIn": "サインイン",
     "signOut": "サインアウト",
-    "signUp": "アカウント登録",
-    "email": "メールアドレス",
-    "password": "パスワード",
-    "resetPassword": "パスワードをリセット",
-    "forgotPassword": "パスワードをお忘れですか？",
-    "hasAccount": "アカウントをお持ちの方はこちら",
-    "noAccount": "アカウントをお持ちでない方はこちら",
-    "googleButton": "Googleでサインイン"
+    "lineLoginTitle": "LINEでログイン",
+    "lineLoginDescription": "LINEアカウントでミニアプリを利用します。",
+    "lineLoginButton": "LINEで続行",
+    "lineLoginHint": "LINEアプリが自動的に開かない場合は、上のボタンをタップしてください。",
+    "syncing": "連携中..."
   },
   "settings": {
     "title": "設定",
@@ -43,9 +40,11 @@
     },
     "accountConnections": {
       "title": "アカウント連携",
-      "description": "連携済みのアカウントを管理します。",
-      "googleConnected": "Google カレンダー接続済",
-      "googleConnect": "Google カレンダーを接続"
+      "description": "このミニアプリとLINEアカウントの連携を管理します。",
+      "lineConnected": "LINEアカウント連携済み",
+      "lineConnect": "LINEアカウントを連携",
+      "lineDisconnect": "LINEアカウントの連携を解除",
+      "syncing": "連携処理中..."
     }
   }
 }

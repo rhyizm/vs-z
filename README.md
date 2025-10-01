@@ -10,13 +10,13 @@ This is a template project for Next.js v15 (App Router) featuring internationali
 *   **Internationalization (i18n):**
     *   Powered by `next-intl` (migrated from i18next).
     *   Supports multiple languages (English, Japanese, French configured by default).
-    *   Locale-based routing (e.g., `/en`, `/ja`, `/fr`).
+    *   Locale-based routing (e.g., `/en`, `/ja`).
     *   Language selector component included.
     *   Translation files located in `src/messages/`.
 *   **Light/Dark Mode:**
     *   Implemented using `next-themes`.
     *   Theme toggle component allows users to switch between light, dark, or system preference.
-*   **Authentication:** NextAuth.js-based authentication with Google OAuth and custom credentials.
+*   **Authentication:** NextAuth.js session management backed by LINE LIFF login.
 *   **UI Components:** Built with shadcn/ui and Radix UI primitives.
 *   **Layout Components:** Pre-built components for common layouts (Sidebar, Header, Content).
 *   **Icons:** Uses `lucide-react` for a clean set of icons.
@@ -57,7 +57,7 @@ pnpm dev
 # yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. The default language is English (`/en`). You can access other languages like Japanese at `/ja` or French at `/fr`.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. The default language is English (`/en`). You can access other languages like Japanese at `/ja`.
 
 ## Available Scripts
 
@@ -78,6 +78,46 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 *   [shadcn/ui](https://ui.shadcn.com/)
 *   [Radix UI](https://www.radix-ui.com/)
 *   [lucide-react](https://lucide.dev/)
+
+## Cloudflare D1 + Drizzle Setup
+
+1.  Install the new tooling after pulling these changes:
+    ```bash
+    pnpm install
+    ```
+2.  Configure the credentials Drizzle needs when running migrations (exposed by Cloudflare):
+    ```bash
+    export CLOUDFLARE_ACCOUNT_ID=xxxxxxxxxxxxxxxxxxxx
+    export CLOUDFLARE_D1_DATABASE_ID=xxxxxxxxxxxxxxxxxxxx
+    export CLOUDFLARE_D1_TOKEN=xxxxxxxxxxxxxxxxxxxx
+    ```
+    *(You can also place the same variables in a `.env` file that is loaded before running the scripts.)*
+3.  Copy `wrangler.example.toml` to `wrangler.toml` and replace the placeholder `database_id` (and other fields) with the values for your Cloudflare D1 instance. The generated migrations in `./drizzle` are referenced automatically.
+4.  Generate a migration from the Drizzle schema and push it to Cloudflare D1:
+    ```bash
+    pnpm db:generate
+    pnpm db:push
+    ```
+5.  For local development with `wrangler dev`, the D1 binding must be available as `env.DB`. The helper in `src/lib/db/client.ts` expects that name and will reuse the same Drizzle instance per request.
+
+### Using the D1 binding in routes
+
+API routes or Server Actions that run on the Edge runtime can access the database like this:
+
+```ts
+import type { D1Database } from '@/lib/db'
+import { getDbFromBindings, schema } from '@/lib/db'
+
+export const runtime = 'edge'
+
+export async function GET(request: Request, { env }: { env: { DB: D1Database } }) {
+  const db = getDbFromBindings(env)
+  const profiles = await db.select().from(schema.estateProfiles)
+  return Response.json({ profiles })
+}
+```
+
+When deploying on Cloudflare Pages with `@cloudflare/next-on-pages`, you can alternatively obtain the bindings via `getRequestContext().env` and pass them to `getDbFromBindings`.
 
 ## Folder Structure (Key Directories)
 
@@ -100,7 +140,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │   │   └── ui/         # shadcn/ui components (Button, Card, Input, etc.)
 │   ├── lib/            # Utility libraries and configurations
 │   │   └── next-auth/  # NextAuth.js configuration
-│   ├── messages/       # Translation files (en, ja, fr)
+│   ├── messages/       # Translation files (en, ja)
 │   ├── i18n/           # i18n configuration files
 │   ├── middleware.ts   # Next.js middleware for i18n routing
 │   └── ...
@@ -120,12 +160,11 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Authentication
 
-This project uses NextAuth.js for authentication:
+This project uses NextAuth.js for session management and LINE LIFF for authentication:
 
-*   **NextAuth.js:** JWT-based authentication with Google OAuth and custom credentials
-*   **Configuration:** Located in `src/lib/next-auth/auth.ts` and `auth.config.ts`
-*   **Providers:** Google OAuth and custom credentials (dummy implementation)
-*   **Environment Variables:** Requires `AUTH_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`
+*   **NextAuth.js:** JWT-based authentication configured in `src/lib/next-auth/auth.ts` and `auth.config.ts`.
+*   **LIFF Integration:** Client-side login is handled by `@line/liff`; ID tokens are verified on the server via `verifyLineIdToken` in `src/lib/liff/server.ts`.
+*   **Environment Variables:** Requires `AUTH_SECRET`, `NEXT_PUBLIC_LIFF_ID`, and `LINE_LOGIN_CHANNEL_ID`.
 
 ### Supabase Authentication Setup (Alternative)
 

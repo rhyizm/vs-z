@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PieChart, Plus, Calculator, Home, TrendingUp, Shield, Car, Minus, CreditCard, Receipt, AlertCircle } from "lucide-react"
-import { AssetData } from "../types"
+import { AssetData } from "../../../types/inheritance"
 
 export default function AssetsStep({
   data,
