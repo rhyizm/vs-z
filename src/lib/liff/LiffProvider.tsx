@@ -188,17 +188,18 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
       setSyncingSession(true);
 
       try {
-        let resolvedToken = currentLiff.getIDToken();
+        const idTokenFromLiff = currentLiff.getIDToken();
+        const accessTokenFromLiff = currentLiff.getAccessToken?.() ?? null;
+
+        let resolvedToken = idTokenFromLiff;
         let resolvedTokenType: LineTokenType = 'id';
 
         if (!resolvedToken) {
-          const accessToken = currentLiff.getAccessToken?.();
-
-          if (!accessToken) {
+          if (!accessTokenFromLiff) {
             throw new Error('LINEの認証トークンを取得できませんでした。');
           }
 
-          resolvedToken = accessToken;
+          resolvedToken = accessTokenFromLiff;
           resolvedTokenType = 'access';
         }
 
@@ -214,6 +215,9 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
           throw new Error('LINEユーザーIDの取得に失敗しました。');
         }
 
+        const accessTokenForSync =
+          resolvedTokenType === 'access' ? resolvedToken : accessTokenFromLiff ?? undefined;
+
         const response = await fetch('/api/line/session', {
           method: 'POST',
           headers: {
@@ -222,11 +226,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             tokenType: resolvedTokenType,
             idToken: resolvedTokenType === 'id' ? resolvedToken : undefined,
-            accessToken: resolvedTokenType === 'access' ? resolvedToken : undefined,
-            profile: {
-              displayName: resolvedProfile.displayName ?? null,
-              pictureUrl: resolvedProfile.pictureUrl ?? null,
-            },
+            accessToken: accessTokenForSync,
           }),
         });
 

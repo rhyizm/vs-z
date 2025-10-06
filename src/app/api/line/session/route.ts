@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { ensureLineUser } from '@/lib/users/service'
 import {
+  LineTokenVerificationError,
   fetchLineProfileWithAccessToken,
   verifyLineAccessToken,
   verifyLineIdToken,
@@ -31,15 +32,15 @@ export async function POST(request: Request) {
   try {
     const tokenType = body?.tokenType ?? (body?.accessToken ? 'access' : 'id')
 
-    if (tokenType === 'access') {
-      const accessToken = body?.accessToken
-
-      if (!accessToken) {
+    const synchroniseWithAccessToken = async (accessToken: string) => {
+      if (!accessToken || !accessToken.trim()) {
         return NextResponse.json({ error: 'accessTokenが必要です。' }, { status: 400 })
       }
 
-      await verifyLineAccessToken(accessToken)
-      const profileResponse = await fetchLineProfileWithAccessToken(accessToken)
+      const trimmedAccessToken = accessToken.trim()
+
+      await verifyLineAccessToken(trimmedAccessToken)
+      const profileResponse = await fetchLineProfileWithAccessToken(trimmedAccessToken)
 
       const lineSub = profileResponse.userId
 
@@ -49,8 +50,8 @@ export async function POST(request: Request) {
 
       const result = await ensureLineUser({
         liffSub: lineSub,
-        displayName: body?.profile?.displayName ?? profileResponse.displayName ?? null,
-        imageUrl: body?.profile?.pictureUrl ?? profileResponse.pictureUrl ?? null,
+        displayName: profileResponse.displayName ?? null,
+        imageUrl: profileResponse.pictureUrl ?? null,
       })
 
       return NextResponse.json(
@@ -59,28 +60,49 @@ export async function POST(request: Request) {
       )
     }
 
+    if (tokenType === 'access') {
+      return synchroniseWithAccessToken(body?.accessToken ?? '')
+    }
+
     const idToken = body?.idToken
 
-    if (!idToken) {
+    if (!idToken || !idToken.trim()) {
       return NextResponse.json({ error: 'idTokenが必要です。' }, { status: 400 })
     }
 
-    const payload = await verifyLineIdToken(idToken)
+    try {
+      const trimmedIdToken = idToken.trim()
+      const payload = await verifyLineIdToken(trimmedIdToken)
 
-    if (!payload.sub) {
-      return NextResponse.json({ error: 'LINEユーザーIDを特定できませんでした。' }, { status: 400 })
+      if (!payload.sub) {
+        return NextResponse.json({ error: 'LINEユーザーIDを特定できませんでした。' }, { status: 400 })
+      }
+
+      const result = await ensureLineUser({
+        liffSub: payload.sub,
+        displayName: payload.name ?? null,
+        imageUrl: payload.picture ?? null,
+      })
+
+      return NextResponse.json(
+        { userId: result.id, created: result.created, lineSub: payload.sub },
+        { status: result.created ? 201 : 200 },
+      )
+    } catch (idTokenError) {
+      if (
+        idTokenError instanceof LineTokenVerificationError &&
+        idTokenError.status === 400 &&
+        (body?.accessToken ?? '').trim()
+      ) {
+        console.warn(
+          'LINE ID token verification failed with 400. Falling back to access token verification.',
+          idTokenError.detail,
+        )
+        return synchroniseWithAccessToken(body?.accessToken ?? '')
+      }
+
+      throw idTokenError
     }
-
-    const result = await ensureLineUser({
-      liffSub: payload.sub,
-      displayName: body?.profile?.displayName ?? payload.name ?? null,
-      imageUrl: body?.profile?.pictureUrl ?? payload.picture ?? null,
-    })
-
-    return NextResponse.json(
-      { userId: result.id, created: result.created, lineSub: payload.sub },
-      { status: result.created ? 201 : 200 },
-    )
   } catch (error) {
     console.error('Failed to synchronise LINE session:', error)
     const message = error instanceof Error ? error.message : 'LINEセッションの同期に失敗しました。'

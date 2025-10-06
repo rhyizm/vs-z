@@ -26,6 +26,17 @@ type LineProfileResponse = {
   statusMessage?: string;
 };
 
+export class LineTokenVerificationError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public detail: string,
+  ) {
+    super(message);
+    this.name = 'LineTokenVerificationError';
+  }
+}
+
 /**
  * チャンネルIDを正規化する関数
  * @param value - チャンネルIDの文字列またはundefined
@@ -81,7 +92,11 @@ export async function verifyLineAccessToken(accessToken: string) {
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(`LINE access token verify endpoint responded with ${response.status}: ${detail}`);
+    throw new LineTokenVerificationError(
+      `LINE access token verify endpoint responded with ${response.status}: ${detail}`,
+      response.status,
+      detail,
+    );
   }
 
   const payload = (await response.json()) as LineAccessTokenVerifyResponse;
@@ -141,8 +156,14 @@ export async function verifyLineIdToken(idToken: string) {
     );
   }
 
+  if (!idToken || !idToken.trim()) {
+    throw new Error('LINE id token is required.');
+  }
+
+  const trimmed = idToken.trim();
+
   const body = new URLSearchParams({
-    id_token: idToken,
+    id_token: trimmed,
     client_id: channelId,
   });
 
@@ -156,7 +177,11 @@ export async function verifyLineIdToken(idToken: string) {
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(`LINE verify endpoint responded with ${response.status}: ${detail}`);
+    throw new LineTokenVerificationError(
+      `LINE verify endpoint responded with ${response.status}: ${detail}`,
+      response.status,
+      detail,
+    );
   }
 
   const payload = (await response.json()) as LineVerifyResponse;
