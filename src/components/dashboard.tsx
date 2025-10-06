@@ -213,70 +213,65 @@ export default function Dashboard({
 
   const familyMembers = generateFamilyMembers()
 
-  const generateActionItems = (): ActionItem[] => {
-    const items: ActionItem[] = []
+  useEffect(() => {
+    if (data.actionItems.length === 0) {
+      const items: ActionItem[] = []
 
-    if (data.hasAssetData && calculation.estimatedTax > 0) {
+      if (data.hasAssetData && calculation.estimatedTax > 0) {
+        items.push({
+          id: "will-creation",
+          title: "遺言書の作成",
+          description: "相続税対策と円滑な相続のため、公正証書遺言の作成を検討してください。",
+          priority: "high",
+          completed: false,
+          dueDate: "6ヶ月以内",
+          estimatedCost: 100000,
+        })
+
+        items.push({
+          id: "life-insurance",
+          title: "生命保険の活用",
+          description: "相続税の非課税枠（500万円×法定相続人数）を活用した生命保険への加入を検討してください。",
+          priority: "high",
+          completed: false,
+          dueDate: "3ヶ月以内",
+          estimatedCost: 0,
+        })
+
+        items.push({
+          id: "gift-tax-planning",
+          title: "贈与税の活用",
+          description: "年間110万円の基礎控除を活用した計画的な生前贈与を検討してください。",
+          priority: "medium",
+          completed: false,
+          dueDate: "1年以内",
+          estimatedCost: 0,
+        })
+      }
+
       items.push({
-        id: "will-creation",
-        title: "遺言書の作成",
-        description: "相続税対策と円滑な相続のため、公正証書遺言の作成を検討してください。",
-        priority: "high",
+        id: "family-meeting",
+        title: "家族会議の開催",
+        description: "相続について家族で話し合い、意思を共有することが重要です。",
+        priority: "medium",
         completed: false,
-        dueDate: "6ヶ月以内",
-        estimatedCost: 100000,
+        dueDate: "1ヶ月以内",
+        estimatedCost: 0,
       })
 
       items.push({
-        id: "life-insurance",
-        title: "生命保険の活用",
-        description: "相続税の非課税枠（500万円×法定相続人数）を活用した生命保険への加入を検討してください。",
-        priority: "high",
+        id: "document-organization",
+        title: "重要書類の整理",
+        description: "不動産登記簿、預金通帳、保険証券などの重要書類を整理・保管してください。",
+        priority: "low",
         completed: false,
         dueDate: "3ヶ月以内",
         estimatedCost: 0,
       })
 
-      items.push({
-        id: "gift-tax-planning",
-        title: "贈与税の活用",
-        description: "年間110万円の基礎控除を活用した計画的な生前贈与を検討してください。",
-        priority: "medium",
-        completed: false,
-        dueDate: "1年以内",
-        estimatedCost: 0,
-      })
+      onUpdate({ ...data, actionItems: items })
     }
-
-    items.push({
-      id: "family-meeting",
-      title: "家族会議の開催",
-      description: "相続について家族で話し合い、意思を共有することが重要です。",
-      priority: "medium",
-      completed: false,
-      dueDate: "1ヶ月以内",
-      estimatedCost: 0,
-    })
-
-    items.push({
-      id: "document-organization",
-      title: "重要書類の整理",
-      description: "不動産登記簿、預金通帳、保険証券などの重要書類を整理・保管してください。",
-      priority: "low",
-      completed: false,
-      dueDate: "3ヶ月以内",
-      estimatedCost: 0,
-    })
-
-    return items
-  }
-
-  useEffect(() => {
-    if (data.actionItems.length === 0) {
-      const newActionItems = generateActionItems()
-      onUpdate({ ...data, actionItems: newActionItems })
-    }
-  }, [data, familyData.hasSpouse, calculation.estimatedTax, generateActionItems, onUpdate])
+  }, [calculation.estimatedTax, data, onUpdate])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-blue-50 p-4">

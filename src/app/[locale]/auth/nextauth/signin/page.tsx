@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { useLiff } from '@/lib/liff';
 
 export default function NextAuthSignInPage() {
@@ -11,14 +10,13 @@ export default function NextAuthSignInPage() {
   const params = useParams();
   const locale = params.locale as string;
   const router = useRouter();
-  const { status } = useSession();
   const { login, error, syncingSession, isReady, isLoggedIn } = useLiff();
 
   useEffect(() => {
-    if (status === 'authenticated' && isLoggedIn) {
+    if (isLoggedIn) {
       router.replace(`/${locale}`);
     }
-  }, [status, isLoggedIn, router, locale]);
+  }, [isLoggedIn, router, locale]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-950">

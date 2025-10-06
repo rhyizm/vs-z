@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useLiff } from '@/lib/liff';
 
 export default function UserMenu() {
   const t = useTranslations();
-  const { data: session, status } = useSession();
   const {
     login,
     logout,
@@ -17,6 +16,7 @@ export default function UserMenu() {
     isLoggedIn,
     syncingSession,
     error,
+    profile,
   } = useLiff();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,11 +54,11 @@ export default function UserMenu() {
     }
   }, [syncingSession]);
 
-  if (!isReady || status === 'loading') {
+  if (!isReady) {
     return null; // Or a loading spinner
   }
 
-  if (!isLoggedIn || !session?.user) {
+  if (!isLoggedIn || !profile) {
     return (
       <div className="flex flex-col items-end space-y-2">
         {error && (
@@ -91,15 +91,18 @@ export default function UserMenu() {
           <button
             ref={iconButtonRef}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="h-8 w-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="relative h-8 w-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-expanded={isDropdownOpen}
             aria-haspopup="true"
           >
-            {session.user.image ? (
-              <img
-                src={session.user.image}
-                alt={session.user.name || t('common.user')}
-                className="h-full w-full object-cover"
+            {profile.pictureUrl ? (
+              <Image
+                src={profile.pictureUrl}
+                alt={profile.displayName || t('common.user')}
+                fill
+                sizes="32px"
+                className="object-cover"
+                unoptimized
               />
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,14 +114,19 @@ export default function UserMenu() {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
               <div className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
-                {session.user.image && (
-                  <img
-                    src={session.user.image}
-                    alt={session.user.name || t('common.user')}
-                    className="h-6 w-6 rounded-full mr-2 object-cover"
-                  />
+                {profile.pictureUrl && (
+                  <div className="relative h-6 w-6 mr-2">
+                    <Image
+                      src={profile.pictureUrl}
+                      alt={profile.displayName || t('common.user')}
+                      fill
+                      sizes="24px"
+                      className="rounded-full object-cover"
+                      unoptimized
+                    />
+                  </div>
                 )}
-                <span className="truncate">{session.user.name || t('common.user')}</span>
+                <span className="truncate">{profile.displayName || t('common.user')}</span>
               </div>
               <Link
                 href="/settings"

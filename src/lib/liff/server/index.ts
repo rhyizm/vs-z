@@ -1,1 +1,1 @@
-export { verifyLineIdToken } from './server';
+export { getLineChannelId, verifyLineIdToken } from './server';

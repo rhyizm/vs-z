@@ -1,5 +1,11 @@
-// src/app/api/auth/[...nextauth]/route.ts
-export { GET, POST } from '@/lib/next-auth/auth';
+import { NextResponse } from 'next/server'
 
-// ランタイムを 'edge' に設定する場合 (任意)
-// export const runtime = 'edge';
+export const runtime = 'nodejs'
+
+export async function GET() {
+  return NextResponse.json({ error: 'NextAuth endpoint is no longer available.' }, { status: 410 })
+}
+
+export async function POST() {
+  return NextResponse.json({ error: 'NextAuth endpoint is no longer available.' }, { status: 410 })
+}

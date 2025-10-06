@@ -1,7 +1,12 @@
 "use client"
 
-import { useMemo, useState, useCallback } from "react"
+import { useMemo, useState, useCallback, useEffect, useRef } from "react"
+import type { ReactNode } from "react"
 import Dashboard from "@/components/dashboard"
+import { useLiff } from "@/lib/liff"
+import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
+import { useEstateProfile } from "@/hooks/useEstateProfile"
 
 // ステップ用コンポーネント
 import IntroStep from "./steps/IntroStep"
@@ -13,8 +18,27 @@ import AssetsStep from "./steps/AssetsStep"
 
 // 型
 import type { Step, FamilyData, AssetData, DashboardData, TaxCalculation } from "@/types/inheritance"
+import type { EstateProfilePayload } from "@/types/estate-profile"
 
 export default function InheritanceTaxDiagnosis() {
+  return <InheritanceTaxDiagnosisContent />
+}
+
+function isAssetDataEqual(a: AssetData, b: AssetData) {
+  return (
+    a.cash === b.cash &&
+    a.realEstate === b.realEstate &&
+    a.securities === b.securities &&
+    a.insurance === b.insurance &&
+    a.other === b.other &&
+    a.loans === b.loans &&
+    a.funeralCosts === b.funeralCosts &&
+    a.unpaidTaxes === b.unpaidTaxes
+  )
+}
+
+function InheritanceTaxDiagnosisContent() {
+  const { isReady, isLoggedIn, login, error, syncingSession, idToken } = useLiff()
   const [currentStep, setCurrentStep] = useState<Step>("intro")
   const [familyData, setFamilyData] = useState<FamilyData>({
     hasSpouse: false,
@@ -39,6 +63,9 @@ export default function InheritanceTaxDiagnosis() {
     funeralCosts: 0,
     unpaidTaxes: 0,
   })
+
+  const lastPersistedAssetDataRef = useRef<AssetData>(assetData)
+  const assetAutosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     familyMembers: [],
@@ -135,114 +162,341 @@ export default function InheritanceTaxDiagnosis() {
 
   const calculation = useMemo(() => calculateTax(), [calculateTax])
 
-  const generateDashboardData = (hasAssets = false): DashboardData => {
-    const familyMembers: DashboardData["familyMembers"] = []
-    const actionItems: DashboardData["actionItems"] = []
+  const generateDashboardData = useCallback(
+    (hasAssets = false): DashboardData => {
+      const familyMembers: DashboardData["familyMembers"] = []
+      const actionItems: DashboardData["actionItems"] = []
 
-    const diagnosisResult = {
-      totalAssets: totalPlus,
-      totalLiabilities: totalMinus,
-      netAssets: totalPlus - totalMinus,
-      estimatedTax: calculation.estimatedTax,
-      taxRate: totalPlus > 0 ? (calculation.estimatedTax / (totalPlus * 10000)) * 100 : 0,
-      basicDeduction: calculation.basicDeduction,
-    }
+      const diagnosisResult = {
+        totalAssets: totalPlus,
+        totalLiabilities: totalMinus,
+        netAssets: totalPlus - totalMinus,
+        estimatedTax: calculation.estimatedTax,
+        taxRate: totalPlus > 0 ? (calculation.estimatedTax / (totalPlus * 10000)) * 100 : 0,
+        basicDeduction: calculation.basicDeduction,
+      }
 
-    return {
-      familyMembers,
-      actionItems,
-      diagnosisResult,
-      hasAssetData: hasAssets,
-    }
-  }
+      return {
+        familyMembers,
+        actionItems,
+        diagnosisResult,
+        hasAssetData: hasAssets,
+      }
+    },
+    [calculation.basicDeduction, calculation.estimatedTax, totalMinus, totalPlus],
+  )
 
-  const nextStep = () => {
+  const {
+    profileId,
+    profile,
+    saveProfile,
+    isSaving,
+    isLoading,
+    error: persistenceError,
+    loadLatestProfile,
+  } = useEstateProfile()
+
+  const hasRequestedProfileRef = useRef(false)
+  const hasAppliedProfileRef = useRef(false)
+
+  const persistProfile = useCallback(
+    (
+      nextStep: Step,
+      overrides?: {
+        dashboard?: DashboardData
+        asset?: AssetData
+      },
+    ) => {
+      const payload: EstateProfilePayload = {
+        id: profileId ?? undefined,
+        currentStep: nextStep,
+        familyData,
+        assetData: overrides?.asset ?? assetData,
+        dashboardData: overrides?.dashboard ?? dashboardData,
+        taxCalculation: calculation,
+      }
+
+      if (assetAutosaveTimeoutRef.current) {
+        clearTimeout(assetAutosaveTimeoutRef.current)
+        assetAutosaveTimeoutRef.current = null
+      }
+
+      lastPersistedAssetDataRef.current = payload.assetData
+      void saveProfile(payload)
+    },
+    [assetData, calculation, dashboardData, familyData, profileId, saveProfile],
+  )
+
+  const updateDashboardAndPersist = useCallback(
+    (hasAssets: boolean) => {
+      const updatedDashboard = generateDashboardData(hasAssets)
+      setDashboardData(updatedDashboard)
+      persistProfile("dashboard", { dashboard: updatedDashboard })
+    },
+    [generateDashboardData, persistProfile],
+  )
+
+  const nextStep = useCallback(() => {
     switch (currentStep) {
       case "intro":
         setCurrentStep("spouse")
+        persistProfile("spouse")
         break
       case "spouse":
         setCurrentStep("children")
+        persistProfile("children")
         break
       case "children":
         setCurrentStep("parents")
+        persistProfile("parents")
         break
       case "parents":
         setCurrentStep("siblings")
+        persistProfile("siblings")
         break
       case "siblings":
-        setDashboardData(generateDashboardData(false))
         setCurrentStep("dashboard")
+        updateDashboardAndPersist(false)
         break
       case "assets":
-        setDashboardData(generateDashboardData(true))
         setCurrentStep("dashboard")
+        updateDashboardAndPersist(true)
         break
       default:
         break
     }
+  }, [currentStep, persistProfile, updateDashboardAndPersist])
+
+  useEffect(() => {
+    if (!isReady) {
+      return
+    }
+
+    if (!isLoggedIn || !idToken) {
+      setCurrentStep("intro")
+      hasRequestedProfileRef.current = false
+      hasAppliedProfileRef.current = false
+      return
+    }
+
+    if (hasRequestedProfileRef.current) {
+      return
+    }
+
+    hasRequestedProfileRef.current = true
+
+    loadLatestProfile().catch((error) => {
+      console.error("Failed to load estate profile:", error)
+      hasRequestedProfileRef.current = false
+    })
+  }, [isReady, isLoggedIn, idToken, loadLatestProfile])
+
+  useEffect(() => {
+    if (!profile) {
+      hasAppliedProfileRef.current = false
+      return
+    }
+
+    if (hasAppliedProfileRef.current) {
+      return
+    }
+
+    setFamilyData(profile.familyData)
+    setAssetData(profile.assetData)
+    lastPersistedAssetDataRef.current = profile.assetData
+    setDashboardData(profile.dashboardData)
+    setCurrentStep("dashboard")
+    hasAppliedProfileRef.current = true
+  }, [profile])
+
+  useEffect(() => {
+    if (currentStep !== "assets") {
+      if (!isAssetDataEqual(lastPersistedAssetDataRef.current, assetData)) {
+        persistProfile("assets", { asset: assetData })
+      }
+      if (assetAutosaveTimeoutRef.current) {
+        clearTimeout(assetAutosaveTimeoutRef.current)
+        assetAutosaveTimeoutRef.current = null
+      }
+      return
+    }
+
+    if (isAssetDataEqual(lastPersistedAssetDataRef.current, assetData)) {
+      return
+    }
+
+    if (assetAutosaveTimeoutRef.current) {
+      clearTimeout(assetAutosaveTimeoutRef.current)
+    }
+
+    const timeout = setTimeout(() => {
+      persistProfile("assets", { asset: assetData })
+      assetAutosaveTimeoutRef.current = null
+    }, 500)
+
+    assetAutosaveTimeoutRef.current = timeout
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [assetData, currentStep, persistProfile])
+
+  if (!isReady || syncingSession || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <div className="flex flex-col items-center space-y-4 text-muted-foreground">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p>LINEアカウント情報を確認しています...</p>
+        </div>
+      </div>
+    )
   }
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white/80 backdrop-blur shadow-xl p-8 space-y-6 text-center">
+          <h1 className="text-2xl font-semibold">LINE連携が必要です</h1>
+          <p className="text-sm text-muted-foreground">
+            相続診断を開始する前に、LINEログインでミニアプリへの接続を完了してください。
+          </p>
+          {error && (
+            <div className="rounded-md bg-red-50 text-red-600 text-sm p-3">
+              {error}
+            </div>
+          )}
+          <Button
+            size="lg"
+            className="w-full bg-[#06c755] hover:bg-[#05b14c]"
+            onClick={login}
+            disabled={syncingSession}
+          >
+            {syncingSession ? "連携中..." : "LINEでログイン"}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            ボタンを押すとLINEアプリが開き、認証完了後にステップが表示されます。
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const persistenceNotice = persistenceError ? (
+    <div className="fixed top-4 inset-x-0 flex justify-center px-4 z-50">
+      <div className="max-w-md w-full rounded-md bg-red-50 text-red-600 text-sm px-4 py-2 shadow">
+        {persistenceError}
+      </div>
+    </div>
+  ) : null
+
+  const savingIndicator = isSaving ? (
+    <div className="fixed top-4 right-4 text-xs text-muted-foreground bg-white/80 px-3 py-1 rounded-full shadow">
+      保存中...
+    </div>
+  ) : null
+
+  let content: ReactNode
 
   switch (currentStep) {
     case "intro":
-      return <IntroStep onNext={nextStep} />
+      content = <IntroStep onNext={nextStep} />
+      break
     case "spouse":
-      return (
+      content = (
         <SpouseStep
           data={familyData}
           onUpdate={setFamilyData}
           onNext={nextStep}
-          onBack={() => setCurrentStep("intro")}
+          onBack={() => {
+            setCurrentStep("intro")
+            persistProfile("intro")
+          }}
         />
       )
+      break
     case "children":
-      return (
+      content = (
         <ChildrenStep
           data={familyData}
           onUpdate={setFamilyData}
           onNext={nextStep}
-          onBack={() => setCurrentStep("spouse")}
+          onBack={() => {
+            setCurrentStep("spouse")
+            persistProfile("spouse")
+          }}
         />
       )
+      break
     case "parents":
-      return (
+      content = (
         <ParentsStep
           data={familyData}
           onUpdate={setFamilyData}
           onNext={nextStep}
-          onBack={() => setCurrentStep("children")}
+          onBack={() => {
+            setCurrentStep("children")
+            persistProfile("children")
+          }}
         />
       )
+      break
     case "siblings":
-      return (
+      content = (
         <SiblingsStep
           data={familyData}
           onUpdate={setFamilyData}
           onNext={nextStep}
-          onBack={() => setCurrentStep("parents")}
+          onBack={() => {
+            setCurrentStep("parents")
+            persistProfile("parents")
+          }}
         />
       )
+      break
     case "assets":
-      return (
+      content = (
         <AssetsStep
           data={assetData}
           onUpdate={setAssetData}
           onNext={nextStep}
-          onBack={() => setCurrentStep("dashboard")}
+          onBack={() => {
+            setCurrentStep("dashboard")
+            persistProfile("dashboard", { dashboard: dashboardData })
+          }}
         />
       )
+      break
     case "dashboard":
-      return (
+      content = (
         <Dashboard
           data={dashboardData}
           familyData={familyData}
           calculation={calculation}
-          onUpdate={setDashboardData}
-          onEditFamily={() => setCurrentStep("spouse")}
-          onToAssets={() => setCurrentStep("assets")}
+          onUpdate={(data) => {
+            setDashboardData(data)
+            persistProfile("dashboard", { dashboard: data })
+          }}
+          onEditFamily={() => {
+            setCurrentStep("spouse")
+            persistProfile("spouse")
+          }}
+          onToAssets={() => {
+            setCurrentStep("assets")
+            persistProfile("assets")
+          }}
         />
       )
+      break
     default:
-      return <IntroStep onNext={nextStep} />
+      content = <IntroStep onNext={nextStep} />
+      break
   }
+
+  return (
+    <>
+      {persistenceNotice}
+      {savingIndicator}
+      {content}
+    </>
+  )
 }

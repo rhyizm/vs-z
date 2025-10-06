@@ -2,7 +2,6 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Liff } from '@line/liff';
-import { signIn, signOut, useSession } from 'next-auth/react';
 import { Profile } from "@/types";
 import type { LiffContextValue, NativeLiffProfile } from './types';
 
@@ -26,18 +25,31 @@ function normaliseProfile(nativeProfile: NativeLiffProfile): Profile {
 
 /**
  * LIFF SDKの初期化とログイン状態の監視を行い、取得したLINEユーザー情報を
- * NextAuthのセッションへ同期させるアプリケーション全体のプロバイダー。
+ * アプリケーション全体へ提供するプロバイダー。
  */
 export function LiffProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status: sessionStatus } = useSession();
   const [liffInstance, setLiffInstance] = useState<Liff | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [idToken, setIdToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [syncingSession, setSyncingSession] = useState(false);
-  const [hasSyncedSession, setHasSyncedSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const initializingRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const profileRef = useRef<Profile | null>(null);
+  const syncingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   useEffect(() => {
     if (initializingRef.current) {
@@ -96,7 +108,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
       } catch (initError) {
         console.error('Failed to initialize LIFF:', initError);
         if (isMounted) {
-          setError('LINEミニアプリの初期化に失敗しました。LINEアプリ内で再度開き直してください。');
+          setError(JSON.stringify(initError));
           setIsReady(true);
         }
       }
@@ -121,7 +133,6 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
 
     if (!loggedIn) {
       setProfile(null);
-      setHasSyncedSession(false);
       return;
     }
 
@@ -159,88 +170,105 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn(loggedIn);
 
     if (!loggedIn) {
-      setHasSyncedSession(false);
-      if (sessionStatus === 'authenticated') {
-        signOut({ redirect: false });
-      }
+      setIdToken(null);
+      setUserId(null);
+      setSyncingSession(false);
+      syncingRef.current = false;
       return;
     }
 
-    if (sessionStatus === 'loading') {
+    if (idToken || syncingRef.current) {
       return;
     }
 
-    if (sessionStatus === 'authenticated') {
-      if (!hasSyncedSession) {
-        setHasSyncedSession(true);
-      }
-      return;
-    }
+    const synchroniseToken = async () => {
+      syncingRef.current = true;
+      setSyncingSession(true);
 
-    if (syncingSession || hasSyncedSession) {
-      return;
-    }
+      try {
+        const token = currentLiff.getIDToken();
 
-    const idToken = currentLiff.getIDToken();
-
-    if (!idToken) {
-      setError('LINEのIDトークンを取得できませんでした。アプリを再度開いてください。');
-      return;
-    }
-
-    const decoded = currentLiff.getDecodedIDToken();
-    const currentProfile: Profile | null = profile ?? (decoded?.sub
-      ? {
-          userId: decoded.sub,
-          displayName: decoded.name ?? 'LINE User',
-          pictureUrl: decoded.picture ?? undefined,
-          statusMessage: undefined,
+        if (!token) {
+          throw new Error('LINEのIDトークンを取得できませんでした。');
         }
-      : null);
 
-    const userId = decoded?.sub ?? currentProfile?.userId;
+        const decoded = currentLiff.getDecodedIDToken() as {
+          sub?: string;
+          name?: string;
+          picture?: string;
+          email?: string;
+        };
 
-    if (!userId) {
-      setError('LINEユーザーIDの取得に失敗しました。再度ログインしてください。');
-      return;
-    }
+        if (!decoded?.sub) {
+          throw new Error('LINEユーザーIDの取得に失敗しました。');
+        }
 
-    setSyncingSession(true);
+        const existingProfile = profileRef.current;
+        const resolvedProfile =
+          existingProfile ?? {
+            userId: decoded.sub,
+            displayName: decoded.name ?? 'LINE User',
+            pictureUrl: decoded.picture ?? undefined,
+            statusMessage: undefined,
+          };
 
-    signIn('credentials', {
-      redirect: false,
-      idToken,
-      userId,
-      displayName: currentProfile?.displayName ?? decoded?.name ?? 'LINE User',
-      pictureUrl: currentProfile?.pictureUrl ?? decoded?.picture ?? undefined,
-      email: decoded?.email ?? undefined,
-    })
-      .then((result) => {
-        if (result?.error) {
-          console.error('Failed to synchronise LIFF session with NextAuth:', result.error);
-          setHasSyncedSession(false);
-          setError('LINEアカウントとの連携に失敗しました。アプリを再起動してください。');
-        } else {
+        const response = await fetch('/api/line/session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            idToken: token,
+            profile: {
+              displayName: resolvedProfile.displayName ?? null,
+              pictureUrl: resolvedProfile.pictureUrl ?? null,
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          let message = 'LINEアカウントとの連携に失敗しました。しばらくしてから再試行してください。';
+
+          try {
+            const data = (await response.json()) as { error?: string };
+            if (data?.error) {
+              message = data.error;
+            }
+          } catch {
+            // ignore parse errors
+          }
+
+          throw new Error(message);
+        }
+
+        if (isMountedRef.current) {
           setError(null);
-          setHasSyncedSession(true);
+          setIdToken(token);
+          setUserId(decoded.sub);
+
+          if (!existingProfile) {
+            setProfile(resolvedProfile);
+          }
         }
-      })
-      .catch((signinError) => {
-        console.error('Unexpected error while signing in with LIFF token:', signinError);
-        setHasSyncedSession(false);
-        setError('LINEアカウントとの連携に失敗しました。しばらくしてから再試行してください。');
-      })
-      .finally(() => {
-        setSyncingSession(false);
-      });
-  }, [
-    liffInstance,
-    isReady,
-    sessionStatus,
-    syncingSession,
-    hasSyncedSession,
-    profile,
-  ]);
+      } catch (tokenError) {
+        console.error('Failed to synchronise LIFF token:', tokenError);
+
+        if (isMountedRef.current) {
+          setError('LINEアカウントとの連携に失敗しました。しばらくしてから再試行してください。');
+          setIdToken(null);
+          setUserId(null);
+        }
+      } finally {
+        syncingRef.current = false;
+
+        if (isMountedRef.current) {
+          setSyncingSession(false);
+        }
+      }
+    };
+
+    void synchroniseToken();
+  }, [liffInstance, isReady, profile, idToken]);
 
   /**
    * LINEアプリ側のログインフローを開始する。初期化エラー時にはメッセージを設定する。
@@ -265,8 +293,8 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   }, [liffInstance]);
 
   /**
-   * LIFFとNextAuth双方のセッションを破棄し、ローカル状態を初期化する。
-   */
+ * LIFFのセッションを破棄し、ローカル状態を初期化する。
+ */
   const logout = useCallback(async () => {
     if (liffInstance?.isLoggedIn()) {
       try {
@@ -278,14 +306,10 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoggedIn(false);
     setProfile(null);
-    setHasSyncedSession(false);
+    setIdToken(null);
+    setUserId(null);
+    setSyncingSession(false);
     setError(null);
-
-    try {
-      await signOut({ redirect: false, callbackUrl: '/' });
-    } catch (signOutError) {
-      console.error('Failed to sign out from NextAuth session:', signOutError);
-    }
   }, [liffInstance]);
 
   /**
@@ -310,23 +334,25 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     profile,
     isReady,
     isLoggedIn,
+    idToken,
+    userId,
     syncingSession,
     error,
     login,
     logout,
     refreshProfile,
-    session: session ?? null,
   }), [
     liffInstance,
     profile,
     isReady,
     isLoggedIn,
+    idToken,
+    userId,
     syncingSession,
     error,
     login,
     logout,
     refreshProfile,
-    session,
   ]);
 
   return <LiffContext.Provider value={value}>{children}</LiffContext.Provider>;

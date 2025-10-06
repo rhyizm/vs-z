@@ -1,2 +1,3 @@
 export { LiffProvider, useLiff } from './LiffProvider';
-export type { LineProfile, LiffContextValue, NativeLiffProfile } from './types';
+export { verifyLineIdToken } from './server';
+export type { LiffContextValue, NativeLiffProfile } from './types';

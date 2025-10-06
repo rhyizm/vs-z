@@ -4,6 +4,8 @@ export interface D1Result<T = unknown> {
   results?: T[]
   meta?: {
     duration?: number
+    changes?: number
+    lastInsertRowid?: number | null
   }
 }
 

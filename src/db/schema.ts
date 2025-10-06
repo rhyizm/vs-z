@@ -9,6 +9,7 @@ import {
   real,
   sqliteTable,
   text,
+  uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
 
 import type {
@@ -22,6 +23,69 @@ type ActionItem = DashboardData['actionItems'][number]
 type FamilyMember = DashboardData['familyMembers'][number]
 type DiagnosisResult = DashboardData['diagnosisResult']
 
+export const users = sqliteTable(
+  'users',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    liffSub: text('liff_sub').notNull(),
+    clerkUserId: text('clerk_user_id'),
+    externalId: text('external_id'),
+    primaryEmailAddressId: text('primary_email_address_id'),
+    firstName: text('first_name'),
+    lastName: text('last_name'),
+    displayName: text('display_name'),
+    imageUrl: text('image_url'),
+    phoneNumber: text('phone_number'),
+    publicMetadata: text('public_metadata', { mode: 'json' }).$type<
+      Record<string, unknown>
+    >(),
+    unsafeMetadata: text('unsafe_metadata', { mode: 'json' }).$type<
+      Record<string, unknown>
+    >(),
+    lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex('users_liff_sub_idx').on(table.liffSub),
+    uniqueIndex('users_clerk_user_id_idx').on(table.clerkUserId),
+    uniqueIndex('users_external_id_idx').on(table.externalId),
+  ],
+)
+
+export const userEmailAddresses = sqliteTable(
+  'user_email_addresses',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    emailAddress: text('email_address').notNull(),
+    verificationStatus: text('verification_status'),
+    isPrimary: integer('is_primary', { mode: 'boolean' })
+      .default(false)
+      .notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (table) => [
+    index('user_email_addresses_user_idx').on(table.userId),
+    uniqueIndex('user_email_addresses_email_idx').on(table.emailAddress),
+  ],
+)
+
 /**
  * LINEミニアプリの利用者（LINEユーザーID）ごとに複数の相続診断プロファイルを保持するテーブル。
  * フロントエンドのステップウィザードで入力された家族構成・資産情報・計算結果をまとめて永続化する。
@@ -30,7 +94,9 @@ export const estateProfiles = sqliteTable('estate_profiles', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  userId: text('user_id').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   label: text('label'),
   notes: text('notes'),
   currentStep: text('current_step').default('intro').notNull(),
@@ -126,9 +192,28 @@ export const profileFamilyMembers = sqliteTable(
   ],
 )
 
-export const estateProfilesRelations = relations(estateProfiles, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
+  emailAddresses: many(userEmailAddresses),
+  estateProfiles: many(estateProfiles),
+}))
+
+export const userEmailAddressesRelations = relations(
+  userEmailAddresses,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userEmailAddresses.userId],
+      references: [users.id],
+    }),
+  }),
+)
+
+export const estateProfilesRelations = relations(estateProfiles, ({ many, one }) => ({
   actionItems: many(profileActionItems),
   familyMembers: many(profileFamilyMembers),
+  user: one(users, {
+    fields: [estateProfiles.userId],
+    references: [users.id],
+  }),
 }))
 
 export const profileActionItemsRelations = relations(

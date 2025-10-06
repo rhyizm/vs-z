@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useSession } from 'next-auth/react';
 import { useLiff } from '@/lib/liff';
 
 // Define props interface
@@ -23,10 +22,9 @@ export default function AccountConnections({
   lineDisconnectText,
   syncingText,
 }: AccountConnectionsProps) {
-  const { status } = useSession();
   const { isLoggedIn, login, logout, syncingSession } = useLiff();
 
-  const isConnected = isLoggedIn && status === 'authenticated';
+  const isConnected = isLoggedIn;
 
   return (
     <Card>

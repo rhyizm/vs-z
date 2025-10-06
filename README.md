@@ -164,7 +164,7 @@ This project uses NextAuth.js for session management and LINE LIFF for authentic
 
 *   **NextAuth.js:** JWT-based authentication configured in `src/lib/next-auth/auth.ts` and `auth.config.ts`.
 *   **LIFF Integration:** Client-side login is handled by `@line/liff`; ID tokens are verified on the server via `verifyLineIdToken` in `src/lib/liff/server.ts`.
-*   **Environment Variables:** Requires `AUTH_SECRET`, `NEXT_PUBLIC_LIFF_ID`, and `LINE_LOGIN_CHANNEL_ID`.
+*   **Environment Variables:** Requires `AUTH_SECRET` for NextAuth, `NEXT_PUBLIC_LIFF_ID`, and `LINE_LOGIN_CHANNEL_ID` for LINE Login to integrate with Clerk.
 
 ### Supabase Authentication Setup (Alternative)
 
