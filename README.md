@@ -79,45 +79,45 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 *   [Radix UI](https://www.radix-ui.com/)
 *   [lucide-react](https://lucide.dev/)
 
-## Cloudflare D1 + Drizzle Setup
+## Turso + Drizzle Setup
 
-1.  Install the new tooling after pulling these changes:
+1.  Turso CLI でデータベースを作成し、接続情報をメモします。
+    ```bash
+    turso db create --group vs-z --location aws-ap-northeast-1
+    turso db show <database-name>
+    turso db tokens create <database-name>
+    ```
+2.  取得した接続 URL とトークンを `.env` に設定します。
+    ```bash
+    TURSO_CONNECTION_URL="libsql://<host>.turso.io"
+    TURSO_AUTH_TOKEN="<token>"
+    # （互換用に DATABASE_URL / DATABASE_AUTH_TOKEN を使っても可）
+    ```
+3.  依存関係をインストールします。
     ```bash
     pnpm install
     ```
-2.  Configure the credentials Drizzle needs when running migrations (exposed by Cloudflare):
-    ```bash
-    export CLOUDFLARE_ACCOUNT_ID=xxxxxxxxxxxxxxxxxxxx
-    export CLOUDFLARE_D1_DATABASE_ID=xxxxxxxxxxxxxxxxxxxx
-    export CLOUDFLARE_D1_TOKEN=xxxxxxxxxxxxxxxxxxxx
-    ```
-    *(You can also place the same variables in a `.env` file that is loaded before running the scripts.)*
-3.  Copy `wrangler.example.toml` to `wrangler.toml` and replace the placeholder `database_id` (and other fields) with the values for your Cloudflare D1 instance. The generated migrations in `./drizzle` are referenced automatically.
-4.  Generate a migration from the Drizzle schema and push it to Cloudflare D1:
+4.  Drizzle のスキーマから SQL を生成し、Turso に適用します。
     ```bash
     pnpm db:generate
-    pnpm db:push
+    pnpm db:migrate
     ```
-5.  For local development with `wrangler dev`, the D1 binding must be available as `env.DB`. The helper in `src/lib/db/client.ts` expects that name and will reuse the same Drizzle instance per request.
+5.  `pnpm dev` で開発サーバーを起動すると、API ルートは `@libsql/client` 経由で Turso に直接接続します。
 
-### Using the D1 binding in routes
+### Turso 接続コードの概要
 
-API routes or Server Actions that run on the Edge runtime can access the database like this:
+`src/db/index.ts` では公式ドキュメントと同様に `@libsql/client` と `drizzle-orm/libsql` を設定しています。API ルート側では `db` をインポートするだけで Turso に接続できます。
 
 ```ts
-import type { D1Database } from '@/lib/db'
-import { getDbFromBindings, schema } from '@/lib/db'
+import { db, schema } from '@/db'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
-export async function GET(request: Request, { env }: { env: { DB: D1Database } }) {
-  const db = getDbFromBindings(env)
+export async function GET() {
   const profiles = await db.select().from(schema.estateProfiles)
   return Response.json({ profiles })
 }
 ```
-
-When deploying on Cloudflare Pages with `@cloudflare/next-on-pages`, you can alternatively obtain the bindings via `getRequestContext().env` and pass them to `getDbFromBindings`.
 
 ## Folder Structure (Key Directories)
 

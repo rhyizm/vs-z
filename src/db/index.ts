@@ -1,6 +1,8 @@
-// drizzle.config.ts
 import { config } from 'dotenv'
-import { defineConfig } from 'drizzle-kit'
+import { createClient } from '@libsql/client'
+import { drizzle } from 'drizzle-orm/libsql'
+
+import * as schema from './schema'
 
 config({ path: process.env.DOTENV_CONFIG_PATH ?? '.env' })
 
@@ -14,12 +16,13 @@ if (!connectionUrl) {
 const authToken =
   process.env.TURSO_AUTH_TOKEN ?? process.env.DATABASE_AUTH_TOKEN
 
-export default defineConfig({
-  schema: './src/db/schema.ts',
-  out: './migrations',
-  dialect: 'turso',
-  dbCredentials: {
-    url: connectionUrl,
-    ...(authToken ? { authToken } : {}),
-  },
+const client = createClient(
+  authToken ? { url: connectionUrl, authToken } : { url: connectionUrl },
+)
+
+export const db = drizzle(client, {
+  schema,
+  logger: process.env.NODE_ENV === 'development',
 })
+
+export { schema }

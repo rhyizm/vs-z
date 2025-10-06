@@ -4,6 +4,7 @@ import createNextIntlPlugin from 'next-intl/plugin'; // Import the plugin
 const nextConfig: NextConfig = {
   /* config options here */
   // Add any existing Next.js config options here
+  allowedDevOrigins: ['*.ngrok-free.app'],
 };
 
 // Wrap the config with the next-intl plugin, pointing to your i18n config file

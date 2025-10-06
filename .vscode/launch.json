@@ -9,6 +9,33 @@
       "runtimeArgs": ["run-script", "dev"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Wrangler Pages Dev",
+      "runtimeExecutable": "wrangler",
+      "runtimeArgs": ["pages", "dev", "--", "pnpm", "dev"],
+      "env": {
+        "NODE_OPTIONS": "--inspect"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Next.js",
+      "address": "localhost",
+      "port": 9229,
+      "restart": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Wrangler Dev + Attach",
+      "configurations": ["Wrangler Pages Dev", "Attach to Next.js"]
     }
   ]
 }

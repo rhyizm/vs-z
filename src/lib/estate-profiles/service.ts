@@ -1,16 +1,13 @@
 import { randomUUID } from 'node:crypto'
 
-import { and, asc, desc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq, sql } from 'drizzle-orm'
 
 import {
   estateProfiles,
   profileActionItems,
   profileFamilyMembers,
 } from '@/db/schema'
-import { getDbFromBindings } from '@/lib/db/client'
-import { getLocalD1Bindings } from '@/lib/db/local-d1'
-
-import type { CloudflareBindings } from '@/lib/db/types'
+import { getDb } from '@/lib/db/client'
 import type { EstateProfilePayload, EstateProfileResponse } from '@/types/estate-profile'
 import type { Step } from '@/types/inheritance'
 
@@ -19,42 +16,50 @@ type UpsertResult = {
   created: boolean
 }
 
-function assertBindings(bindings?: CloudflareBindings): asserts bindings is CloudflareBindings {
-  if (!bindings) {
-    throw new Error(
-      'Cloudflare D1 bindings are required to access the database. Configure a binding or run `wrangler d1` to provision a local database.',
-    )
-  }
-}
-
 export async function upsertEstateProfile(
-  bindings: CloudflareBindings | undefined,
   userId: string,
   payload: EstateProfilePayload,
 ): Promise<UpsertResult> {
-  const effectiveBindings = bindings ?? (await getLocalD1Bindings()) ?? undefined
-
-  assertBindings(effectiveBindings)
-
-  const db = getDbFromBindings(effectiveBindings)
+  const db = getDb()
 
   const profileId = payload.id ?? randomUUID()
   const timestamp = new Date()
 
-  if (payload.id) {
-    const existingProfile = await db
-      .select({ id: estateProfiles.id })
-      .from(estateProfiles)
-      .where(and(eq(estateProfiles.id, profileId), eq(estateProfiles.userId, userId)))
-      .limit(1)
+  let created = false
 
-    if (!existingProfile.length) {
-      throw new Error('対象のプロファイルが見つかりません。')
-    }
+  await db.transaction(async (tx) => {
+    if (payload.id) {
+      const existingProfile = await tx
+        .select({ id: estateProfiles.id })
+        .from(estateProfiles)
+        .where(and(eq(estateProfiles.id, profileId), eq(estateProfiles.userId, userId)))
+        .limit(1)
 
-    await db
-      .update(estateProfiles)
-      .set({
+      if (!existingProfile.length) {
+        throw new Error('対象のプロファイルが見つかりません。')
+      }
+
+      await tx
+        .update(estateProfiles)
+        .set({
+          label: payload.label ?? null,
+          notes: payload.notes ?? null,
+          currentStep: payload.currentStep,
+          hasAssetData: payload.dashboardData.hasAssetData,
+          familyData: payload.familyData,
+          assetData: payload.assetData,
+          taxCalculation: payload.taxCalculation,
+          diagnosisSummary: payload.dashboardData.diagnosisResult,
+          updatedAt: timestamp,
+        })
+        .where(and(eq(estateProfiles.id, profileId), eq(estateProfiles.userId, userId)))
+
+      await tx.delete(profileActionItems).where(eq(profileActionItems.profileId, profileId))
+      await tx.delete(profileFamilyMembers).where(eq(profileFamilyMembers.profileId, profileId))
+    } else {
+      await tx.insert(estateProfiles).values({
+        id: profileId,
+        userId,
         label: payload.label ?? null,
         notes: payload.notes ?? null,
         currentStep: payload.currentStep,
@@ -63,92 +68,103 @@ export async function upsertEstateProfile(
         assetData: payload.assetData,
         taxCalculation: payload.taxCalculation,
         diagnosisSummary: payload.dashboardData.diagnosisResult,
-        updatedAt: timestamp,
-      })
-      .where(and(eq(estateProfiles.id, profileId), eq(estateProfiles.userId, userId)))
-
-    await db.delete(profileActionItems).where(eq(profileActionItems.profileId, profileId))
-    await db.delete(profileFamilyMembers).where(eq(profileFamilyMembers.profileId, profileId))
-  } else {
-    await db.insert(estateProfiles).values({
-      id: profileId,
-      userId,
-      label: payload.label ?? null,
-      notes: payload.notes ?? null,
-      currentStep: payload.currentStep,
-      hasAssetData: payload.dashboardData.hasAssetData,
-      familyData: payload.familyData,
-      assetData: payload.assetData,
-      taxCalculation: payload.taxCalculation,
-      diagnosisSummary: payload.dashboardData.diagnosisResult,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    })
-  }
-
-  if (payload.dashboardData.actionItems.length) {
-    await db.insert(profileActionItems).values(
-      payload.dashboardData.actionItems.map((item, index) => ({
-        profileId,
-        itemKey: item.id,
-        title: item.title,
-        description: item.description,
-        priority: item.priority,
-        completed: item.completed,
-        dueDate: item.dueDate ?? null,
-        estimatedCostYen: item.estimatedCost ?? null,
-        orderIndex: index,
         createdAt: timestamp,
         updatedAt: timestamp,
-      })),
-    )
-  }
+      })
 
-  if (payload.dashboardData.familyMembers.length) {
-    await db.insert(profileFamilyMembers).values(
-      payload.dashboardData.familyMembers.map((member) => {
-        const {
-          id,
-          name,
-          relationship,
-          isDeceased,
-          inheritanceShare,
-          inheritanceAmount,
-          inheritanceTax,
-          ...metadata
-        } = member
-        return {
-          profileId,
-          memberKey: id,
-          name,
-          relationship,
-          birthDate: member.birthDate ?? null,
-          age: member.age ?? null,
-          address: member.address ?? null,
-          isDeceased,
-          inheritanceShare: inheritanceShare ?? null,
-          inheritanceAmountManen: inheritanceAmount ?? null,
-          inheritanceTaxManen: inheritanceTax ?? null,
-          metadata,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        }
-      }),
-    )
-  }
+      created = true
+    }
 
-  return { id: profileId, created: !payload.id }
+    if (payload.dashboardData.actionItems.length) {
+      await tx
+        .insert(profileActionItems)
+        .values(
+          payload.dashboardData.actionItems.map((item, index) => ({
+            profileId,
+            itemKey: item.id,
+            title: item.title,
+            description: item.description,
+            priority: item.priority,
+            completed: item.completed,
+            dueDate: item.dueDate ?? null,
+            estimatedCostYen: item.estimatedCost ?? null,
+            orderIndex: index,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [profileActionItems.profileId, profileActionItems.itemKey],
+          set: {
+            title: sql`excluded.title`,
+            description: sql`excluded.description`,
+            priority: sql`excluded.priority`,
+            completed: sql`excluded.completed`,
+            dueDate: sql`excluded.due_date`,
+            estimatedCostYen: sql`excluded.estimated_cost_yen`,
+            orderIndex: sql`excluded.order_index`,
+            updatedAt: sql`excluded.updated_at`,
+          },
+        })
+    }
+
+    if (payload.dashboardData.familyMembers.length) {
+      await tx
+        .insert(profileFamilyMembers)
+        .values(
+          payload.dashboardData.familyMembers.map((member) => {
+            const {
+              id,
+              name,
+              relationship,
+              isDeceased,
+              inheritanceShare,
+              inheritanceAmount,
+              inheritanceTax,
+              ...metadata
+            } = member
+            return {
+              profileId,
+              memberKey: id,
+              name,
+              relationship,
+              birthDate: member.birthDate ?? null,
+              age: member.age ?? null,
+              address: member.address ?? null,
+              isDeceased,
+              inheritanceShare: inheritanceShare ?? null,
+              inheritanceAmountManen: inheritanceAmount ?? null,
+              inheritanceTaxManen: inheritanceTax ?? null,
+              metadata,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+            }
+          }),
+        )
+        .onConflictDoUpdate({
+          target: [profileFamilyMembers.profileId, profileFamilyMembers.memberKey],
+          set: {
+            name: sql`excluded.name`,
+            relationship: sql`excluded.relationship`,
+            birthDate: sql`excluded.birth_date`,
+            age: sql`excluded.age`,
+            address: sql`excluded.address`,
+            isDeceased: sql`excluded.is_deceased`,
+            inheritanceShare: sql`excluded.inheritance_share`,
+            inheritanceAmountManen: sql`excluded.inheritance_amount_manen`,
+            inheritanceTaxManen: sql`excluded.inheritance_tax_manen`,
+            metadata: sql`excluded.metadata`,
+            updatedAt: sql`excluded.updated_at`,
+          },
+        })
+    }
+  })
+
+  return { id: profileId, created }
 }
 
-export async function getLatestEstateProfile(
-  bindings: CloudflareBindings | undefined,
-  userId: string,
-): Promise<EstateProfileResponse | null> {
-  const effectiveBindings = bindings ?? (await getLocalD1Bindings()) ?? undefined
-
-  assertBindings(effectiveBindings)
-
-  const db = getDbFromBindings(effectiveBindings)
+export async function getLatestEstateProfile(userId: string): Promise<EstateProfileResponse | null> {
+  const db = getDb()
 
   const [profile] = await db
     .select({

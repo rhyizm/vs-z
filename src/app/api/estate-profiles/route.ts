@@ -3,16 +3,12 @@ import { NextResponse } from 'next/server'
 import { getLatestEstateProfile, upsertEstateProfile } from '@/lib/estate-profiles/service'
 import { verifyLineIdToken } from '@/lib/liff/server'
 import { ensureLineUser } from '@/lib/users/service'
-
-import type { CloudflareBindings } from '@/lib/db/types'
 import type { EstateProfilePayload } from '@/types/estate-profile'
+import { isMissingTableError } from '@/lib/db/errors'
 
 export const runtime = 'nodejs'
 
-async function authenticateRequest(
-  request: Request,
-  bindings: CloudflareBindings | undefined,
-) {
+async function authenticateRequest(request: Request) {
   const authorization = request.headers.get('authorization')
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -49,7 +45,7 @@ async function authenticateRequest(
   }
 
   try {
-    const user = await ensureLineUser(bindings, {
+    const user = await ensureLineUser({
       liffSub: linePayload.sub,
       displayName: linePayload.name ?? null,
       imageUrl: linePayload.picture ?? null,
@@ -67,10 +63,8 @@ async function authenticateRequest(
   }
 }
 
-export async function POST(request: Request, context: unknown) {
-  const bindings = (context as { env?: CloudflareBindings }).env
-
-  const authResult = await authenticateRequest(request, bindings)
+export async function POST(request: Request) {
+  const authResult = await authenticateRequest(request)
 
   if ('error' in authResult) {
     return authResult.error
@@ -98,26 +92,28 @@ export async function POST(request: Request, context: unknown) {
   }
 
   try {
-    const result = await upsertEstateProfile(bindings, userId, body)
+    const result = await upsertEstateProfile(userId, body)
     const status = result.created ? 201 : 200
     return NextResponse.json(result, { status })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'プロファイルの保存に失敗しました。'
+    const message = isMissingTableError(error)
+      ? 'データベースのテーブルが存在しません。`pnpm db:migrate` を実行して最新のスキーマを反映してください。'
+      : error instanceof Error
+        ? error.message
+        : 'プロファイルの保存に失敗しました。'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
-export async function GET(request: Request, context: unknown) {
-  const bindings = (context as { env?: CloudflareBindings }).env
-
-  const authResult = await authenticateRequest(request, bindings)
+export async function GET(request: Request) {
+  const authResult = await authenticateRequest(request)
 
   if ('error' in authResult) {
     return authResult.error
   }
 
   try {
-    const profile = await getLatestEstateProfile(bindings, authResult.userId)
+    const profile = await getLatestEstateProfile(authResult.userId)
 
     if (!profile) {
       return NextResponse.json({ profile: null }, { status: 200 })
@@ -125,7 +121,11 @@ export async function GET(request: Request, context: unknown) {
 
     return NextResponse.json({ profile }, { status: 200 })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'プロファイルの取得に失敗しました。'
+    const message = isMissingTableError(error)
+      ? 'データベースのテーブルが存在しません。`pnpm db:migrate` を実行して最新のスキーマを反映してください。'
+      : error instanceof Error
+        ? error.message
+        : 'プロファイルの取得に失敗しました。'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

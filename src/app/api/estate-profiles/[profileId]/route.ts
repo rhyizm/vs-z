@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server'
 import { upsertEstateProfile } from '@/lib/estate-profiles/service'
 import { verifyLineIdToken } from '@/lib/liff/server'
 import { ensureLineUser } from '@/lib/users/service'
-
-import type { CloudflareBindings } from '@/lib/db/types'
 import type { EstateProfilePayload } from '@/types/estate-profile'
+import { isMissingTableError } from '@/lib/db/errors'
 
 export const runtime = 'nodejs'
 
@@ -37,12 +36,10 @@ export async function PUT(request: Request, context: unknown) {
     return NextResponse.json({ error: 'LINEユーザーIDが一致しません。' }, { status: 403 })
   }
 
-  const bindings = (context as { env?: CloudflareBindings }).env
-
   let userId: string
 
   try {
-    const user = await ensureLineUser(bindings, {
+    const user = await ensureLineUser({
       liffSub: linePayload.sub,
       displayName: linePayload.name ?? null,
       imageUrl: linePayload.picture ?? null,
@@ -56,7 +53,7 @@ export async function PUT(request: Request, context: unknown) {
     )
   }
 
-  const { params } = context as { params?: { profileId?: string } }
+  const params = await (context as { params?: { profileId?: string } | Promise<{ profileId?: string }> }).params
   const profileId = params?.profileId
 
   if (!profileId) {
@@ -81,10 +78,14 @@ export async function PUT(request: Request, context: unknown) {
   body.id = profileId
 
   try {
-    const result = await upsertEstateProfile(bindings, userId, body)
+    const result = await upsertEstateProfile(userId, body)
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'プロファイルの更新に失敗しました。'
+    const message = isMissingTableError(error)
+      ? 'データベースのテーブルが存在しません。`pnpm db:migrate` を実行して最新のスキーマを反映してください。'
+      : error instanceof Error
+        ? error.message
+        : 'プロファイルの更新に失敗しました。'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

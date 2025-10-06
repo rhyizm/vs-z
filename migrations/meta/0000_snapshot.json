@@ -1,6 +1,6 @@
 {
   "version": "6",
-  "dialect": "sqlite",
+  "dialect": "turso",
   "id": "20b9b7d5-16f4-4146-94bc-6ac5281a206d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {

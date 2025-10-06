@@ -3,8 +3,6 @@ import { NextResponse } from 'next/server'
 import { ensureLineUser } from '@/lib/users/service'
 import { verifyLineIdToken } from '@/lib/liff/server'
 
-import type { CloudflareBindings } from '@/lib/db/types'
-
 export const runtime = 'nodejs'
 
 type SyncLineSessionRequest = {
@@ -15,9 +13,7 @@ type SyncLineSessionRequest = {
   }
 }
 
-export async function POST(request: Request, context: unknown) {
-  const bindings = (context as { env?: CloudflareBindings }).env
-
+export async function POST(request: Request) {
   let body: SyncLineSessionRequest
 
   try {
@@ -39,7 +35,7 @@ export async function POST(request: Request, context: unknown) {
       return NextResponse.json({ error: 'LINEユーザーIDを特定できませんでした。' }, { status: 400 })
     }
 
-    const result = await ensureLineUser(bindings, {
+    const result = await ensureLineUser({
       liffSub: payload.sub,
       displayName: body?.profile?.displayName ?? payload.name ?? null,
       imageUrl: body?.profile?.pictureUrl ?? payload.picture ?? null,
@@ -55,4 +51,3 @@ export async function POST(request: Request, context: unknown) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
-
