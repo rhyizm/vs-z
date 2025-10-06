@@ -53,7 +53,7 @@ export function useEstateProfile(): EstateProfileValue {
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { idToken, userId, isLoggedIn } = useLiff()
+  const { token, tokenType, userId, isLoggedIn } = useLiff()
 
   /**
    * プロファイルを保存する非同期関数
@@ -67,7 +67,7 @@ export function useEstateProfile(): EstateProfileValue {
       setIsSaving(true)
       setError(null)
 
-      if (!isLoggedIn || !idToken) {
+      if (!isLoggedIn || !token || !tokenType) {
         const message = "LINEログインが必要です。"
         setError(message)
         throw new Error(message)
@@ -80,7 +80,8 @@ export function useEstateProfile(): EstateProfileValue {
       try {
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
+          Authorization: `Bearer ${token}`,
+          "X-Line-Token-Type": tokenType,
         }
 
         if (userId) {
@@ -120,7 +121,7 @@ export function useEstateProfile(): EstateProfileValue {
         setIsSaving(false)
       }
     },
-    [idToken, isLoggedIn, profileId, userId],
+    [token, tokenType, isLoggedIn, profileId, userId],
   )
 
   /**
@@ -129,7 +130,7 @@ export function useEstateProfile(): EstateProfileValue {
   const clearError = useCallback(() => setError(null), [])
 
   const loadLatestProfile = useCallback(async () => {
-    if (!isLoggedIn || !idToken) {
+    if (!isLoggedIn || !token || !tokenType) {
       setProfileId(null)
       setProfile(null)
       return null
@@ -140,7 +141,8 @@ export function useEstateProfile(): EstateProfileValue {
 
     try {
       const headers: Record<string, string> = {
-        Authorization: `Bearer ${idToken}`,
+        Authorization: `Bearer ${token}`,
+        "X-Line-Token-Type": tokenType,
       }
 
       if (userId) {
@@ -186,7 +188,7 @@ export function useEstateProfile(): EstateProfileValue {
     } finally {
       setIsLoading(false)
     }
-  }, [idToken, isLoggedIn, userId])
+  }, [token, tokenType, isLoggedIn, userId])
 
   return useMemo(
     () => ({

@@ -2,8 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Liff } from '@line/liff';
-import { Profile } from "@/types";
-import type { LiffContextValue, NativeLiffProfile } from './types';
+import { Profile } from '@/types';
+import type { LiffContextValue, LineTokenType, NativeLiffProfile } from './types';
 
 /**
  * アプリ全体で共有するLIFF関連の状態と操作をカプセル化したReactコンテキスト。
@@ -32,7 +32,8 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [idToken, setIdToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [tokenType, setTokenType] = useState<LineTokenType | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [syncingSession, setSyncingSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -170,14 +171,15 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn(loggedIn);
 
     if (!loggedIn) {
-      setIdToken(null);
+      setToken(null);
+      setTokenType(null);
       setUserId(null);
       setSyncingSession(false);
       syncingRef.current = false;
       return;
     }
 
-    if (idToken || syncingRef.current) {
+    if (token || syncingRef.current) {
       return;
     }
 
@@ -186,31 +188,31 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
       setSyncingSession(true);
 
       try {
-        const token = currentLiff.getIDToken();
+        let resolvedToken = currentLiff.getIDToken();
+        let resolvedTokenType: LineTokenType = 'id';
 
-        if (!token) {
-          throw new Error('LINEのIDトークンを取得できませんでした。');
-        }
+        if (!resolvedToken) {
+          const accessToken = currentLiff.getAccessToken?.();
 
-        const decoded = currentLiff.getDecodedIDToken() as {
-          sub?: string;
-          name?: string;
-          picture?: string;
-          email?: string;
-        };
+          if (!accessToken) {
+            throw new Error('LINEの認証トークンを取得できませんでした。');
+          }
 
-        if (!decoded?.sub) {
-          throw new Error('LINEユーザーIDの取得に失敗しました。');
+          resolvedToken = accessToken;
+          resolvedTokenType = 'access';
         }
 
         const existingProfile = profileRef.current;
-        const resolvedProfile =
-          existingProfile ?? {
-            userId: decoded.sub,
-            displayName: decoded.name ?? 'LINE User',
-            pictureUrl: decoded.picture ?? undefined,
-            statusMessage: undefined,
-          };
+        let resolvedProfile = existingProfile;
+
+        if (!resolvedProfile) {
+          const latestProfile = await currentLiff.getProfile();
+          resolvedProfile = normaliseProfile(latestProfile);
+        }
+
+        if (!resolvedProfile?.userId) {
+          throw new Error('LINEユーザーIDの取得に失敗しました。');
+        }
 
         const response = await fetch('/api/line/session', {
           method: 'POST',
@@ -218,7 +220,9 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            idToken: token,
+            tokenType: resolvedTokenType,
+            idToken: resolvedTokenType === 'id' ? resolvedToken : undefined,
+            accessToken: resolvedTokenType === 'access' ? resolvedToken : undefined,
             profile: {
               displayName: resolvedProfile.displayName ?? null,
               pictureUrl: resolvedProfile.pictureUrl ?? null,
@@ -243,8 +247,9 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
 
         if (isMountedRef.current) {
           setError(null);
-          setIdToken(token);
-          setUserId(decoded.sub);
+          setToken(resolvedToken);
+          setTokenType(resolvedTokenType);
+          setUserId(resolvedProfile.userId);
 
           if (!existingProfile) {
             setProfile(resolvedProfile);
@@ -255,7 +260,8 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
 
         if (isMountedRef.current) {
           setError('LINEアカウントとの連携に失敗しました。しばらくしてから再試行してください。');
-          setIdToken(null);
+          setToken(null);
+          setTokenType(null);
           setUserId(null);
         }
       } finally {
@@ -268,7 +274,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     };
 
     void synchroniseToken();
-  }, [liffInstance, isReady, profile, idToken]);
+  }, [liffInstance, isReady, profile, token]);
 
   /**
    * LINEアプリ側のログインフローを開始する。初期化エラー時にはメッセージを設定する。
@@ -306,7 +312,8 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoggedIn(false);
     setProfile(null);
-    setIdToken(null);
+    setToken(null);
+    setTokenType(null);
     setUserId(null);
     setSyncingSession(false);
     setError(null);
@@ -334,7 +341,8 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     profile,
     isReady,
     isLoggedIn,
-    idToken,
+    token,
+    tokenType,
     userId,
     syncingSession,
     error,
@@ -346,7 +354,8 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     profile,
     isReady,
     isLoggedIn,
-    idToken,
+    token,
+    tokenType,
     userId,
     syncingSession,
     error,

@@ -1,1 +1,6 @@
-export { getLineChannelId, verifyLineIdToken } from './server';
+export {
+  fetchLineProfileWithAccessToken,
+  getLineChannelId,
+  verifyLineAccessToken,
+  verifyLineIdToken,
+} from './server';

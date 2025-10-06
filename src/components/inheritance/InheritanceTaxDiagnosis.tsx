@@ -24,21 +24,8 @@ export default function InheritanceTaxDiagnosis() {
   return <InheritanceTaxDiagnosisContent />
 }
 
-function isAssetDataEqual(a: AssetData, b: AssetData) {
-  return (
-    a.cash === b.cash &&
-    a.realEstate === b.realEstate &&
-    a.securities === b.securities &&
-    a.insurance === b.insurance &&
-    a.other === b.other &&
-    a.loans === b.loans &&
-    a.funeralCosts === b.funeralCosts &&
-    a.unpaidTaxes === b.unpaidTaxes
-  )
-}
-
 function InheritanceTaxDiagnosisContent() {
-  const { isReady, isLoggedIn, login, error, syncingSession, idToken } = useLiff()
+  const { isReady, isLoggedIn, login, error, syncingSession, token } = useLiff()
   const [currentStep, setCurrentStep] = useState<Step>("intro")
   const [familyData, setFamilyData] = useState<FamilyData>({
     hasSpouse: false,
@@ -65,7 +52,6 @@ function InheritanceTaxDiagnosisContent() {
   })
 
   const lastPersistedAssetDataRef = useRef<AssetData>(assetData)
-  const assetAutosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     familyMembers: [],
@@ -216,11 +202,6 @@ function InheritanceTaxDiagnosisContent() {
         taxCalculation: calculation,
       }
 
-      if (assetAutosaveTimeoutRef.current) {
-        clearTimeout(assetAutosaveTimeoutRef.current)
-        assetAutosaveTimeoutRef.current = null
-      }
-
       lastPersistedAssetDataRef.current = payload.assetData
       void saveProfile(payload)
     },
@@ -272,7 +253,7 @@ function InheritanceTaxDiagnosisContent() {
       return
     }
 
-    if (!isLoggedIn || !idToken) {
+    if (!isLoggedIn || !token) {
       setCurrentStep("intro")
       hasRequestedProfileRef.current = false
       hasAppliedProfileRef.current = false
@@ -289,7 +270,7 @@ function InheritanceTaxDiagnosisContent() {
       console.error("Failed to load estate profile:", error)
       hasRequestedProfileRef.current = false
     })
-  }, [isReady, isLoggedIn, idToken, loadLatestProfile])
+  }, [isReady, isLoggedIn, token, loadLatestProfile])
 
   useEffect(() => {
     if (!profile) {
@@ -308,38 +289,6 @@ function InheritanceTaxDiagnosisContent() {
     setCurrentStep("dashboard")
     hasAppliedProfileRef.current = true
   }, [profile])
-
-  useEffect(() => {
-    if (currentStep !== "assets") {
-      if (!isAssetDataEqual(lastPersistedAssetDataRef.current, assetData)) {
-        persistProfile("assets", { asset: assetData })
-      }
-      if (assetAutosaveTimeoutRef.current) {
-        clearTimeout(assetAutosaveTimeoutRef.current)
-        assetAutosaveTimeoutRef.current = null
-      }
-      return
-    }
-
-    if (isAssetDataEqual(lastPersistedAssetDataRef.current, assetData)) {
-      return
-    }
-
-    if (assetAutosaveTimeoutRef.current) {
-      clearTimeout(assetAutosaveTimeoutRef.current)
-    }
-
-    const timeout = setTimeout(() => {
-      persistProfile("assets", { asset: assetData })
-      assetAutosaveTimeoutRef.current = null
-    }, 500)
-
-    assetAutosaveTimeoutRef.current = timeout
-
-    return () => {
-      clearTimeout(timeout)
-    }
-  }, [assetData, currentStep, persistProfile])
 
   if (!isReady || syncingSession || isLoading) {
     return (
@@ -460,8 +409,12 @@ function InheritanceTaxDiagnosisContent() {
           onUpdate={setAssetData}
           onNext={nextStep}
           onBack={() => {
+            setAssetData({ ...lastPersistedAssetDataRef.current })
             setCurrentStep("dashboard")
-            persistProfile("dashboard", { dashboard: dashboardData })
+            persistProfile("dashboard", {
+              asset: lastPersistedAssetDataRef.current,
+              dashboard: dashboardData,
+            })
           }}
         />
       )

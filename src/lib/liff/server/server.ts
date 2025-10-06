@@ -13,6 +13,19 @@ type LineVerifyResponse = {
   email?: string;
 };
 
+type LineAccessTokenVerifyResponse = {
+  client_id: string;
+  expires_in: number;
+  scope?: string;
+};
+
+type LineProfileResponse = {
+  userId: string;
+  displayName?: string;
+  pictureUrl?: string;
+  statusMessage?: string;
+};
+
 /**
  * チャンネルIDを正規化する関数
  * @param value - チャンネルIDの文字列またはundefined
@@ -41,6 +54,76 @@ export function getLineChannelId() {
   const fallbackChannelId = normaliseChannelId(process.env.NEXT_PUBLIC_LINE_CHANNEL_ID);
 
   return configuredChannelId ?? fallbackChannelId;
+}
+
+/**
+ * LINEのアクセストークンを検証する非同期関数
+ * @param accessToken - 検証するアクセストークン文字列
+ * @throws 検証に失敗した場合にエラーをスロー
+ * @returns 検証結果の情報を含むPromise
+ */
+export async function verifyLineAccessToken(accessToken: string) {
+  if (!accessToken || !accessToken.trim()) {
+    throw new Error('LINE access token is required.');
+  }
+
+  const trimmed = accessToken.trim();
+
+  const channelId = getLineChannelId();
+  const url = new URL('https://api.line.me/oauth2/v2.1/verify');
+  url.searchParams.set('access_token', trimmed);
+
+  if (channelId) {
+    url.searchParams.set('client_id', channelId);
+  }
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`LINE access token verify endpoint responded with ${response.status}: ${detail}`);
+  }
+
+  const payload = (await response.json()) as LineAccessTokenVerifyResponse;
+
+  if (channelId && payload.client_id !== channelId) {
+    throw new Error('LINE access token is not issued for this channel.');
+  }
+
+  return payload;
+}
+
+/**
+ * アクセストークンを使ってLINEプロフィールを取得する非同期関数
+ * @param accessToken - プロフィール取得に利用するアクセストークン
+ * @throws プロフィール取得に失敗した場合にエラーをスロー
+ * @returns LINEプロフィール情報を含むPromise
+ */
+export async function fetchLineProfileWithAccessToken(accessToken: string) {
+  if (!accessToken || !accessToken.trim()) {
+    throw new Error('LINE access token is required.');
+  }
+
+  const trimmed = accessToken.trim();
+
+  const response = await fetch('https://api.line.me/v2/profile', {
+    headers: {
+      Authorization: `Bearer ${trimmed}`,
+    },
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`LINE profile endpoint responded with ${response.status}: ${detail}`);
+  }
+
+  const profile = (await response.json()) as LineProfileResponse;
+
+  if (!profile.userId) {
+    throw new Error('LINE profile response did not contain a userId.');
+  }
+
+  return profile;
 }
 
 /**

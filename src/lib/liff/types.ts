@@ -1,14 +1,17 @@
 import type { Liff } from '@line/liff';
-import type { Profile } from "@/types";
+import type { Profile } from '@/types';
 
 export type NativeLiffProfile = Awaited<ReturnType<Liff['getProfile']>>;
+
+export type LineTokenType = 'id' | 'access';
 
 export type LiffContextValue = {
   liff: Liff | null;
   profile: Profile | null;
   isReady: boolean;
   isLoggedIn: boolean;
-  idToken: string | null;
+  token: string | null;
+  tokenType: LineTokenType | null;
   userId: string | null;
   syncingSession: boolean;
   error: string | null;
