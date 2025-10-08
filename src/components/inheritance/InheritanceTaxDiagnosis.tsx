@@ -26,6 +26,7 @@ export default function InheritanceTaxDiagnosis() {
 
 function InheritanceTaxDiagnosisContent() {
   const { isReady, isLoggedIn, login, error, syncingSession, token } = useLiff()
+  const isAuthenticating = isLoggedIn && (!token || syncingSession)
   const [currentStep, setCurrentStep] = useState<Step>("intro")
   const [familyData, setFamilyData] = useState<FamilyData>({
     hasSpouse: false,
@@ -290,7 +291,7 @@ function InheritanceTaxDiagnosisContent() {
     hasAppliedProfileRef.current = true
   }, [profile])
 
-  if (!isReady || syncingSession || isLoading) {
+  if (!isReady || isLoading || isAuthenticating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
         <div className="flex flex-col items-center space-y-4 text-muted-foreground">
