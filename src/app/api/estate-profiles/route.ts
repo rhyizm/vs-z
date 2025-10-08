@@ -1,70 +1,14 @@
 import { NextResponse } from 'next/server'
 
 import { getLatestEstateProfile, upsertEstateProfile } from '@/lib/estate-profiles/service'
-import { verifyLineIdToken } from '@/lib/liff/server'
-import { ensureLineUser } from '@/lib/users/service'
 import type { EstateProfilePayload } from '@/types/estate-profile'
 import { isMissingTableError } from '@/lib/db/errors'
+import { authenticateEstateProfileRequest } from './auth'
 
 export const runtime = 'nodejs'
 
-async function authenticateRequest(request: Request) {
-  const authorization = request.headers.get('authorization')
-
-  if (!authorization || !authorization.startsWith('Bearer ')) {
-    return {
-      error: NextResponse.json({ error: 'LINEの認証情報が不足しています。' }, { status: 401 }),
-    }
-  }
-
-  const idToken = authorization.slice('Bearer '.length)
-
-  let linePayload: Awaited<ReturnType<typeof verifyLineIdToken>>
-
-  try {
-    linePayload = await verifyLineIdToken(idToken)
-  } catch (error) {
-    console.error('Failed to verify LINE ID token:', error)
-    return {
-      error: NextResponse.json({ error: 'LINEの認証に失敗しました。' }, { status: 401 }),
-    }
-  }
-
-  const requestedUserId = request.headers.get('x-line-user-id')
-
-  if (!linePayload.sub) {
-    return {
-      error: NextResponse.json({ error: 'LINEユーザーIDを特定できませんでした。' }, { status: 401 }),
-    }
-  }
-
-  if (requestedUserId && requestedUserId !== linePayload.sub) {
-    return {
-      error: NextResponse.json({ error: 'LINEユーザーIDが一致しません。' }, { status: 403 }),
-    }
-  }
-
-  try {
-    const user = await ensureLineUser({
-      liffSub: linePayload.sub,
-      displayName: linePayload.name ?? null,
-      imageUrl: linePayload.picture ?? null,
-    })
-
-    return { userId: user.id }
-  } catch (error) {
-    console.error('Failed to persist LINE user:', error)
-    return {
-      error: NextResponse.json(
-        { error: 'ユーザー情報の登録に失敗しました。しばらくしてから再試行してください。' },
-        { status: 500 },
-      ),
-    }
-  }
-}
-
 export async function POST(request: Request) {
-  const authResult = await authenticateRequest(request)
+  const authResult = await authenticateEstateProfileRequest(request)
 
   if ('error' in authResult) {
     return authResult.error
@@ -106,7 +50,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const authResult = await authenticateRequest(request)
+  const authResult = await authenticateEstateProfileRequest(request)
 
   if ('error' in authResult) {
     return authResult.error

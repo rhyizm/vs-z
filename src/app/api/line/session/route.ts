@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       })
 
       return NextResponse.json(
-        { userId: result.id, created: result.created, lineSub },
+        { userId: result.id, created: result.created, lineSub, tokenType: 'access' },
         { status: result.created ? 201 : 200 },
       )
     }
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       })
 
       return NextResponse.json(
-        { userId: result.id, created: result.created, lineSub: payload.sub },
+        { userId: result.id, created: result.created, lineSub: payload.sub, tokenType: 'id' },
         { status: result.created ? 201 : 200 },
       )
     } catch (idTokenError) {

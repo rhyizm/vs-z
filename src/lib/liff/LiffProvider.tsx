@@ -234,7 +234,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
           let message = 'LINEアカウントとの連携に失敗しました。しばらくしてから再試行してください。';
 
           try {
-            const data = (await response.json()) as { error?: string };
+            const data = (await response.clone().json()) as { error?: string };
             if (data?.error) {
               message = data.error;
             }
@@ -245,11 +245,30 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
           throw new Error(message);
         }
 
+        const data = (await response.json()) as {
+          userId?: string;
+          lineSub?: string;
+          tokenType?: LineTokenType | null;
+        };
+
+        const responseTokenType = data?.tokenType ?? resolvedTokenType;
+
+        const nextToken =
+          responseTokenType === 'access'
+            ? accessTokenForSync ?? (resolvedTokenType === 'access' ? resolvedToken : null)
+            : resolvedToken;
+
+        if (!nextToken) {
+          throw new Error('LINEの認証トークンを取得できませんでした。');
+        }
+
+        const nextUserId = data?.lineSub ?? resolvedProfile.userId;
+
         if (isMountedRef.current) {
           setError(null);
-          setToken(resolvedToken);
-          setTokenType(resolvedTokenType);
-          setUserId(resolvedProfile.userId);
+          setToken(nextToken);
+          setTokenType(responseTokenType);
+          setUserId(nextUserId);
 
           if (!existingProfile) {
             setProfile(resolvedProfile);
