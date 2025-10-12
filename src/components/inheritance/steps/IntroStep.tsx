@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { HelpHint } from "@/components/help/help-hint"
 import { Calculator } from "lucide-react"
 
 export default function IntroStep({ onNext }: { onNext: () => void }) {
@@ -25,7 +26,20 @@ export default function IntroStep({ onNext }: { onNext: () => void }) {
           <CardTitle className="text-2xl gradient-text">相続税かんたん診断</CardTitle>
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>本ツールは生前の試算です。死亡日の入力は不要です。</p>
-            <p>基礎控除 = 3,000万円 + 600万円 × 法定相続人の数</p>
+            <p className="flex items-center justify-center gap-2">
+              <span>基礎控除 = 3,000万円 + 600万円 × 法定相続人の数</span>
+              <HelpHint
+                size="sm"
+                label="法定相続人の説明"
+                tooltip="法律で決まっている相続できる人です。"
+                popoverTitle="法定相続人とは"
+              >
+                <div className="space-y-1">
+                  <p>法律で決まっている相続できる人。</p>
+                  <p>（例：配偶者や子どもなど）</p>
+                </div>
+              </HelpHint>
+            </p>
             <p className="text-xs">相続放棄予定者がいても「放棄がなかったものとした場合の人数」で計算します。</p>
           </div>
         </CardHeader>

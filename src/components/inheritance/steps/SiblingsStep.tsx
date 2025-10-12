@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
+import { HelpHint } from "@/components/help/help-hint"
 import { Users, Plus, Minus } from "lucide-react"
 import { FamilyData } from "../../../types/inheritance"
 
@@ -62,7 +63,20 @@ export default function SiblingsStep({
             {/* 生存している兄弟姉妹 */}
             <div className="space-y-4">
               <div>
-                <Label>全血の兄弟姉妹（両親が同じ）</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label>全血の兄弟姉妹（両親が同じ）</Label>
+                  <HelpHint
+                    size="sm"
+                    label="全血の兄弟姉妹の説明"
+                    tooltip="父母どちらも同じ兄弟姉妹。"
+                    popoverTitle="全血とは"
+                  >
+                    <div className="space-y-1">
+                      <p>父母どちらも同じ兄弟姉妹。</p>
+                      <p>（例：同じ父と母から生まれた兄弟）</p>
+                    </div>
+                  </HelpHint>
+                </div>
                 <div className="flex items-center justify-center space-x-4 mt-2">
                   <Button
                     variant="outline"
@@ -96,7 +110,20 @@ export default function SiblingsStep({
                 </div>
               </div>
               <div>
-                <Label>半血の兄弟姉妹（片親が同じ）</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label>半血の兄弟姉妹（片親が同じ）</Label>
+                  <HelpHint
+                    size="sm"
+                    label="半血の兄弟姉妹の説明"
+                    tooltip="父か母のどちらかだけが同じ兄弟姉妹。"
+                    popoverTitle="半血とは"
+                  >
+                    <div className="space-y-1">
+                      <p>父か母のどちらかだけが同じ兄弟姉妹。</p>
+                      <p>（例：父は同じだが母が違う兄弟 など）</p>
+                    </div>
+                  </HelpHint>
+                </div>
                 <div className="flex items-center justify-center space-x-4 mt-2">
                   <Button
                     variant="outline"

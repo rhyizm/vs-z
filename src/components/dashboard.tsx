@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { HelpHint } from "@/components/help/help-hint"
 import { Users, User, Edit3, CheckSquare, ArrowRight, TrendingUp, Calculator } from "lucide-react"
 
 interface FamilyMember {
@@ -288,7 +289,19 @@ export default function Dashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              基礎控除額
+              <span>基礎控除額</span>
+              <HelpHint
+                size="sm"
+                label="基礎控除額の説明"
+                tooltip="相続税がかからない金額のことです。"
+                popoverTitle="基礎控除額とは"
+              >
+                <div className="space-y-1">
+                  <p>相続税がかからない金額のことです。</p>
+                  <p>「相続税の計算のときに、ここまでは課税しません」というラインです。</p>
+                  <p>（3,000万円＋600万円×法定相続人の数）</p>
+                </div>
+              </HelpHint>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -298,7 +311,20 @@ export default function Dashboard({
               </div>
               <p className="text-muted-foreground">3,000万円 + {calculation.heirCount}人 × 600万円</p>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p>法定相続人の数（税法上カウント）: {calculation.heirCount}人</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span>法定相続人の数（税法上カウント）: {calculation.heirCount}人</span>
+                  <HelpHint
+                    size="sm"
+                    label="法定相続人の説明"
+                    tooltip="法律で決まっている相続できる人です。"
+                    popoverTitle="法定相続人とは"
+                  >
+                    <div className="space-y-1">
+                      <p>法律で決まっている相続できる人。</p>
+                      <p>（例：配偶者や子どもなど）</p>
+                    </div>
+                  </HelpHint>
+                </div>
                 <p className="text-xs">※相続放棄者も人数に含める、養子は数制限あり</p>
               </div>
             </div>
@@ -327,26 +353,47 @@ export default function Dashboard({
               <div className="space-y-4">
                 <div className="glass-light rounded-lg overflow-hidden">
                   <div className="grid grid-cols-1 divide-y divide-white/40 md:grid-cols-2 md:divide-y-0 md:divide-x">
-                    <div className="p-5 text-center">
+                    <div className="p-5 text-center space-y-2">
                       <div className="text-2xl font-bold text-green-600">
                         {data.diagnosisResult.totalAssets.toLocaleString()}万円
                       </div>
-                      <div className="text-base text-muted-foreground">総資産</div>
+                      <div className="flex items-center justify-center gap-2 text-base text-muted-foreground">
+                        <span>総資産</span>
+                        <HelpHint
+                          size="sm"
+                          label="総資産の説明"
+                          tooltip="持っているお金や財産のすべてです。"
+                        />
+                      </div>
                     </div>
-                    <div className="p-5 text-center">
+                    <div className="p-5 text-center space-y-2">
                       <div className="text-2xl font-bold text-red-600">
                         {data.diagnosisResult.totalLiabilities.toLocaleString()}万円
                       </div>
-                      <div className="text-base text-muted-foreground">総負債</div>
+                      <div className="flex items-center justify-center gap-2 text-base text-muted-foreground">
+                        <span>総負債</span>
+                        <HelpHint
+                          size="sm"
+                          label="総負債の説明"
+                          tooltip="借金や返すお金のすべてです。"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
                 <div className="h-px bg-black/10" />
-                <div className="glass-light rounded-lg p-5 text-center">
+                <div className="glass-light rounded-lg p-5 text-center space-y-2">
                   <div className="text-3xl font-bold gradient-text">
                     {data.diagnosisResult.netAssets.toLocaleString()}万円
                   </div>
-                  <div className="text-base text-muted-foreground">純資産</div>
+                  <div className="flex items-center justify-center gap-2 text-base text-muted-foreground">
+                    <span>純資産</span>
+                    <HelpHint
+                      size="sm"
+                      label="純資産の説明"
+                      tooltip="財産から借金を引いた本当の残りです。"
+                    />
+                  </div>
                 </div>
                 <div className="text-center">
                   <Button onClick={onToAssets} variant="outline" className="glass-light bg-transparent">
@@ -484,7 +531,7 @@ export default function Dashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckSquare className="h-5 w-5" />
-              相続発生前に取るべきアクション
+              次のステップ
               <Badge variant="outline" className="ml-auto">
                 {completedActions}/{totalActions} 完了
               </Badge>
