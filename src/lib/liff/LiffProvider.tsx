@@ -28,6 +28,8 @@ function normaliseProfile(nativeProfile: NativeLiffProfile): Profile {
  * アプリケーション全体へ提供するプロバイダー。
  */
 export function LiffProvider({ children }: { children: React.ReactNode }) {
+  const shouldSkipLineAuth =
+    process.env.NEXT_PUBLIC_SKIP_LINE_AUTH === 'true' && process.env.NODE_ENV !== 'production';
   const [liffInstance, setLiffInstance] = useState<Liff | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -53,6 +55,22 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   }, [profile]);
 
   useEffect(() => {
+    if (shouldSkipLineAuth) {
+      setIsReady(true);
+      setIsLoggedIn(true);
+      setToken('dev-token');
+      setTokenType('access');
+      setUserId('dev-user');
+      setProfile({
+        userId: 'dev-user',
+        displayName: 'Dev User',
+        pictureUrl: undefined,
+        statusMessage: undefined,
+      });
+      setError(null);
+      return;
+    }
+
     if (initializingRef.current) {
       return;
     }
@@ -120,9 +138,13 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [shouldSkipLineAuth]);
 
   useEffect(() => {
+    if (shouldSkipLineAuth) {
+      return;
+    }
+
     if (!liffInstance) {
       return;
     }
@@ -158,9 +180,13 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [liffInstance]);
+  }, [liffInstance, shouldSkipLineAuth]);
 
   useEffect(() => {
+    if (shouldSkipLineAuth) {
+      return;
+    }
+
     if (!liffInstance || !isReady) {
       return;
     }
@@ -293,12 +319,17 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     };
 
     void synchroniseToken();
-  }, [liffInstance, isReady, profile, token]);
+  }, [liffInstance, isReady, profile, token, shouldSkipLineAuth]);
 
   /**
    * LINEアプリ側のログインフローを開始する。初期化エラー時にはメッセージを設定する。
    */
   const login = useCallback(() => {
+    if (shouldSkipLineAuth) {
+      setError(null);
+      return;
+    }
+
     if (!liffInstance) {
       setError('LINEミニアプリを初期化できませんでした。ページを再読み込みしてください。');
       return;
@@ -315,12 +346,17 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     }
 
     setError(null);
-  }, [liffInstance]);
+  }, [liffInstance, shouldSkipLineAuth]);
 
   /**
  * LIFFのセッションを破棄し、ローカル状態を初期化する。
  */
   const logout = useCallback(async () => {
+    if (shouldSkipLineAuth) {
+      setError(null);
+      return;
+    }
+
     if (liffInstance?.isLoggedIn()) {
       try {
         liffInstance.logout();
@@ -336,12 +372,16 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     setUserId(null);
     setSyncingSession(false);
     setError(null);
-  }, [liffInstance]);
+  }, [liffInstance, shouldSkipLineAuth]);
 
   /**
    * 現在のLINEプロフィール情報を再取得しコンテキストへ反映する。
    */
   const refreshProfile = useCallback(async () => {
+    if (shouldSkipLineAuth) {
+      return;
+    }
+
     if (!liffInstance || !liffInstance.isLoggedIn()) {
       return;
     }
@@ -353,7 +393,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
       console.error('Failed to refresh LIFF profile:', profileError);
       setError('LINEプロフィールの更新に失敗しました。');
     }
-  }, [liffInstance]);
+  }, [liffInstance, shouldSkipLineAuth]);
 
   const value = useMemo<LiffContextValue>(() => ({
     liff: liffInstance,

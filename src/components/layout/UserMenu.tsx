@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useLiff } from '@/lib/liff';
 
@@ -80,7 +80,7 @@ export default function UserMenu() {
   const handleSignOut = async () => {
     setLoading(true);
     await logout();
-    router.push('/');
+    router.push('/check');
     setLoading(false);
   };
 

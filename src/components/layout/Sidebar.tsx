@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import Cookies from 'js-cookie';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
@@ -96,10 +96,11 @@ export default function Sidebar({ sidebarItems, initialCollapsed = true }: Sideb
           <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-thin">
             <ul className="space-y-2">
               {sidebarItems.map((item) => {
+                const normalizedHref = item.href === "/" ? "/check" : item.href;
                 return (
                   <li key={item.name}>
                     <Link
-                      href={item.href}
+                      href={normalizedHref}
                       onClick={close}
                       className="flex items-center p-2 rounded-lg group transition-colors duration-200 hover:bg-accent"
                     >

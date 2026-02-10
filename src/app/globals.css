@@ -122,7 +122,33 @@
   }
 }
 
+@layer components {
+  .landing-page .glass {
+    @apply rounded-3xl border border-white/40 bg-white/80 shadow-2xl shadow-orange-200/40 backdrop-blur-xl;
+  }
+
+  .landing-page .glass-light {
+    @apply rounded-3xl border border-white/30 bg-white/30 shadow-lg shadow-orange-100/30 backdrop-blur-xl;
+  }
+
+  .landing-page .glass-button {
+    @apply bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg shadow-orange-400/40 hover:from-orange-500/90 hover:to-pink-500/90;
+  }
+
+  .landing-page .gradient-text {
+    @apply bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-transparent;
+  }
+}
+
 @layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
   .glass {
     @apply backdrop-blur-xl bg-white/10 border border-white/20;
   }

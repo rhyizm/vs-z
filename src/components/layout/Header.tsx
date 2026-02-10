@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { Link } from '@/i18n/navigation';
 import { Coins, Menu } from 'lucide-react';
 import HeaderBrand from './HeaderBrand';
 import LanguageSelector from "@/components/i18n/LanguageSelector";
@@ -25,7 +26,9 @@ const Header: React.FC<HeaderProps> = ({ credits }) => {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <HeaderBrand mobileOnly={true} text='VS-Z' />
+        <Link href="/check" className="shrink-0">
+          <HeaderBrand mobileOnly={true} text='VS-Z' />
+        </Link>
         <div className="flex flex-grow items-center space-x-2 ml-2 min-w-0">
         </div>
         {/* Display Credits before User Profile */}

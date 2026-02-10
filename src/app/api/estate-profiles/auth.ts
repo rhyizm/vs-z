@@ -16,6 +16,29 @@ type AuthFailure = {
 }
 
 export async function authenticateEstateProfileRequest(request: Request): Promise<AuthSuccess | AuthFailure> {
+  const shouldSkipLineAuth =
+    process.env.NEXT_PUBLIC_SKIP_LINE_AUTH === 'true' && process.env.NODE_ENV !== 'production'
+
+  if (shouldSkipLineAuth) {
+    try {
+      const user = await ensureLineUser({
+        liffSub: 'dev-user',
+        displayName: 'Dev User',
+        imageUrl: null,
+      })
+
+      return { userId: user.id }
+    } catch (error) {
+      console.error('Failed to ensure dev LINE user:', error)
+      return {
+        error: NextResponse.json(
+          { error: '開発用LINEユーザーの登録に失敗しました。' },
+          { status: 500 },
+        ),
+      }
+    }
+  }
+
   const authorization = request.headers.get('authorization')
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
